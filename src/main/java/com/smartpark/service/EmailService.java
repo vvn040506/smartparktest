@@ -1,26 +1,35 @@
 package com.smartpark.service;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import com.resend.Resend;
+import com.resend.core.exception.ResendException;
+import com.resend.services.emails.model.CreateEmailOptions;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    @Value("${resend.api.key}")
+    private String apiKey;
+
+    private static final String FROM_EMAIL = "onboarding@resend.dev";
+    private void sendEmail(String to, String subject, String html) {
+        try {
+            Resend resend = new Resend(apiKey);
+            CreateEmailOptions params = CreateEmailOptions.builder()
+                    .from(FROM_EMAIL)
+                    .to(to)
+                    .subject(subject)
+                    .html(html)
+                    .build();
+            resend.emails().send(params);
+        } catch (ResendException e) {
+            System.err.println("Lỗi gửi email: " + e.getMessage());
+        }
+    }
 
     public void sendResetEmail(String toEmail, String resetLink) {
-        try {
-            MimeMessage msg = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
-
-            helper.setTo(toEmail);
-            helper.setSubject("🅿️ SmartPark – Đặt lại mật khẩu");
-            helper.setText("""
+        String html = """
                 <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;
                             border:1px solid #ddd;border-radius:8px;padding:24px">
                   <h2 style="color:#1a73e8">🅿️ SmartPark</h2>
@@ -36,22 +45,12 @@ public class EmailService {
                     Nếu bạn không yêu cầu, hãy bỏ qua email này.
                   </p>
                 </div>
-            """.formatted(resetLink), true);
-
-            mailSender.send(msg);
-        } catch (MessagingException e) {
-            System.err.println("Lỗi gửi email: " + e.getMessage());
-        }
+            """.formatted(resetLink);
+        sendEmail(toEmail, "🅿️ SmartPark – Đặt lại mật khẩu", html);
     }
 
     public void sendAccountVerificationEmail(String toEmail, String verifyLink, String username) {
-        try {
-            MimeMessage msg = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
-
-            helper.setTo(toEmail);
-            helper.setSubject("🅿️ SmartPark – Xác nhận tài khoản nhân viên");
-            helper.setText("""
+        String html = """
                 <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;
                             border:1px solid #ddd;border-radius:8px;padding:24px">
                   <h2 style="color:#6c5ce7">🅿️ SmartPark</h2>
@@ -76,22 +75,12 @@ public class EmailService {
                     Nếu bạn không yêu cầu tài khoản này, hãy bỏ qua email này.
                   </p>
                 </div>
-            """.formatted(username, verifyLink), true);
-
-            mailSender.send(msg);
-        } catch (MessagingException e) {
-            System.err.println("Lỗi gửi email xác nhận: " + e.getMessage());
-        }
+            """.formatted(username, verifyLink);
+        sendEmail(toEmail, "🅿️ SmartPark – Xác nhận tài khoản nhân viên", html);
     }
 
     public void sendStaffResetEmail(String toEmail, String fullName, String resetLink) {
-        try {
-            MimeMessage msg = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
-
-            helper.setTo(toEmail);
-            helper.setSubject("🅿️ SmartPark – Đặt lại mật khẩu nhân viên");
-            helper.setText("""
+        String html = """
                 <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;
                             border:1px solid #ddd;border-radius:8px;padding:24px">
                   <h2 style="color:#1a73e8">🅿️ SmartPark</h2>
@@ -108,22 +97,12 @@ public class EmailService {
                     Nếu bạn không yêu cầu, hãy bỏ qua email này.
                   </p>
                 </div>
-            """.formatted(fullName, resetLink), true);
-
-            mailSender.send(msg);
-        } catch (MessagingException e) {
-            System.err.println("Lỗi gửi email reset staff: " + e.getMessage());
-        }
+            """.formatted(fullName, resetLink);
+        sendEmail(toEmail, "🅿️ SmartPark – Đặt lại mật khẩu nhân viên", html);
     }
-    
-    public void sendStaffResetOTP(String toEmail, String fullName, String otpCode) {
-        try {
-            MimeMessage msg = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
 
-            helper.setTo(toEmail);
-            helper.setSubject("🅿️ SmartPark – Mã OTP đặt lại mật khẩu");
-            helper.setText("""
+    public void sendStaffResetOTP(String toEmail, String fullName, String otpCode) {
+        String html = """
                 <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;
                             border:1px solid #ddd;border-radius:8px;padding:24px">
                   <h2 style="color:#1a73e8">🅿️ SmartPark</h2>
@@ -143,22 +122,12 @@ public class EmailService {
                     <b>Lưu ý:</b> Không chia sẻ mã OTP này với bất kỳ ai.
                   </p>
                 </div>
-            """.formatted(fullName, otpCode), true);
-
-            mailSender.send(msg);
-        } catch (MessagingException e) {
-            System.err.println("Lỗi gửi email OTP reset staff: " + e.getMessage());
-        }
+            """.formatted(fullName, otpCode);
+        sendEmail(toEmail, "🅿️ SmartPark – Mã OTP đặt lại mật khẩu", html);
     }
-    
-    public void sendAccountVerificationOTP(String toEmail, String fullName, String username, String otpCode) {
-        try {
-            MimeMessage msg = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(msg, true, "UTF-8");
 
-            helper.setTo(toEmail);
-            helper.setSubject("🅿️ SmartPark – Xác nhận tài khoản nhân viên");
-            helper.setText("""
+    public void sendAccountVerificationOTP(String toEmail, String fullName, String username, String otpCode) {
+        String html = """
                 <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;
                             border:1px solid #ddd;border-radius:8px;padding:24px">
                   <h2 style="color:#6c5ce7">🅿️ SmartPark</h2>
@@ -186,11 +155,7 @@ public class EmailService {
                     <b>Lưu ý:</b> Không chia sẻ mã OTP này với bất kỳ ai.
                   </p>
                 </div>
-            """.formatted(fullName, username, otpCode), true);
-
-            mailSender.send(msg);
-        } catch (MessagingException e) {
-            System.err.println("Lỗi gửi email OTP xác nhận: " + e.getMessage());
-        }
+            """.formatted(fullName, username, otpCode);
+        sendEmail(toEmail, "🅿️ SmartPark – Xác nhận tài khoản nhân viên", html);
     }
 }
