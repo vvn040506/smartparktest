@@ -15,6 +15,9 @@ public class EmailService {
     private static final String FROM_EMAIL = "onboarding@resend.dev";
     private void sendEmail(String to, String subject, String html) {
         try {
+            System.out.println("=== RESEND: Đang gửi email tới " + to + " ===");
+            System.out.println("=== RESEND: API Key starts with: " + apiKey.substring(0, 8) + "*** ===");
+
             Resend resend = new Resend(apiKey);
             CreateEmailOptions params = CreateEmailOptions.builder()
                     .from(FROM_EMAIL)
@@ -22,9 +25,15 @@ public class EmailService {
                     .subject(subject)
                     .html(html)
                     .build();
-            resend.emails().send(params);
+
+            var response = resend.emails().send(params);
+            System.out.println("=== RESEND: Gửi thành công! ID: " + response.getId() + " ===");
         } catch (ResendException e) {
-            System.err.println("Lỗi gửi email: " + e.getMessage());
+            System.err.println("=== RESEND LỖI: " + e.getMessage() + " ===");
+            e.printStackTrace();
+        } catch (Exception e) {
+            System.err.println("=== LỖI KHÁC: " + e.getMessage() + " ===");
+            e.printStackTrace();
         }
     }
 
