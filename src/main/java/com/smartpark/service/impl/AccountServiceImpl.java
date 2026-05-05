@@ -96,6 +96,7 @@ public class AccountServiceImpl implements AccountService {
         
         // Xóa token/OTP cũ nếu có
         verificationTokenRepo.deleteByStaffAccount(account);
+        verificationTokenRepo.flush();
         
         // Sinh OTP 6 chữ số
         String otpCode = generateOTP();
