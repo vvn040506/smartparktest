@@ -12,7 +12,7 @@ public class EmailService {
     @Value("${resend.api.key}")
     private String apiKey;
 
-    private static final String FROM_EMAIL = "onboarding@resend.dev";
+    private static final String FROM_EMAIL = "no-reply@smartpark.christmas";
     private void sendEmail(String to, String subject, String html) {
         try {
             System.out.println("=== RESEND: Đang gửi email tới " + to + " ===");
