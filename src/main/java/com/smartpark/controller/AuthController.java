@@ -13,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class AuthController {
@@ -103,12 +104,12 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     public String doForgot(@RequestParam String email,
-                           HttpServletRequest request, Model model) {
-        boolean sent = userService.sendResetOTP(email);
+                           RedirectAttributes redirectAttributes) {
+        userService.sendResetOTP(email);
         // Luôn hiện thông báo thành công (tránh lộ email có tồn tại không)
-        model.addAttribute("success",
+        redirectAttributes.addFlashAttribute("success",
             "Nếu email tồn tại, mã OTP đặt lại mật khẩu đã được gửi đến email của bạn.");
-        return "forgot-password";
+        return "redirect:/reset-password?email=" + email;
     }
 
     // ── RESET PASSWORD (User) ─────────────────────────────────
@@ -147,13 +148,14 @@ public class AuthController {
 
     @PostMapping("/staff/forgot-password")
     public String doStaffForgot(@RequestParam String email,
-                                HttpServletRequest request, Model model) {
+                                HttpServletRequest request,
+                                RedirectAttributes redirectAttributes) {
         String baseUrl = request.getScheme() + "://" + request.getServerName();
-        boolean sent = accountService.sendStaffResetLink(email, baseUrl);
+        accountService.sendStaffResetLink(email, baseUrl);
         // Luôn hiện thông báo thành công (tránh lộ email có tồn tại không)
-        model.addAttribute("success",
+        redirectAttributes.addFlashAttribute("success",
             "Nếu email tồn tại, mã OTP đã được gửi đến email của bạn. Mã có hiệu lực trong 10 phút.");
-        return "staff-forgot-password";
+        return "redirect:/staff/reset-password?email=" + email;
     }
 
     // ── RESET PASSWORD (Staff) với OTP ─────────────────────────────────
