@@ -28,6 +28,8 @@ public interface MonthlyPassRepository extends JpaRepository<MonthlyPass, Long> 
     /** Tìm thẻ chờ thanh toán theo mã */
     Optional<MonthlyPass> findByPaymentCodeAndStatusNot(String paymentCode, String status);
 
+    Optional<MonthlyPass> findByPaymentCode(String paymentCode);
+
     /** Fix #2: Kiểm tra mã thanh toán đã tồn tại chưa (dùng cho retry khi sinh mã) */
     boolean existsByPaymentCode(String paymentCode);
 

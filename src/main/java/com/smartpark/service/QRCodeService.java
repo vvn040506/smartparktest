@@ -100,7 +100,8 @@ public class QRCodeService {
             return result;
         }
 
-        String[] parts = qrData.split("\\|");
+        // Sử dụng limit -1 để giữ các phần tử trống ở cuối
+        String[] parts = qrData.split("\\|", -1);
         
         if (parts.length < 4) {
             return result;

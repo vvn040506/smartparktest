@@ -4,7 +4,12 @@ import com.resend.Resend;
 import com.resend.core.exception.ResendException;
 import com.resend.services.emails.model.CreateEmailOptions;
 import com.resend.services.emails.model.CreateEmailResponse;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,29 +25,61 @@ public class EmailService {
     @Value("${app.email.from:onboarding@resend.dev}")
     private String fromEmail;
 
+    @Autowired(required = false)
+    private JavaMailSender mailSender;
+
+    @Value("${app.email.provider:resend}")
+    private String emailProvider;
+
     private void sendEmail(String to, String subject, String html) {
+        if ("gmail".equalsIgnoreCase(emailProvider) || "smtp".equalsIgnoreCase(emailProvider)) {
+            sendEmailViaSmtp(to, subject, html);
+        } else {
+            sendEmailViaResend(to, subject, html);
+        }
+    }
+
+    private void sendEmailViaResend(String to, String subject, String html) {
         if (resendApiKey == null || resendApiKey.isEmpty() || resendApiKey.startsWith("${")) {
-            System.err.println("❌ [LỖI] Chưa cấu hình RESEND_API_KEY");
+            System.err.println("❌ [LỖI] Chưa cấu hình RESEND_API_KEY. Thử chuyển sang SMTP...");
+            sendEmailViaSmtp(to, subject, html);
             return;
         }
         try {
             System.out.println("🚀 [RESEND] Đang gửi email tới: " + to);
-            
             Resend resend = new Resend(resendApiKey);
-
             CreateEmailOptions options = CreateEmailOptions.builder()
                     .from(fromEmail)
                     .to(to)
                     .subject(subject)
                     .html(html)
                     .build();
-
             CreateEmailResponse response = resend.emails().send(options);
             System.out.println("✅ [RESEND] Gửi thành công tới: " + to + " (ID: " + response.getId() + ")");
         } catch (ResendException e) {
-            System.err.println("❌ [RESEND LỖI] Không thể gửi email!");
-            System.err.println("Lý do: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("❌ [RESEND LỖI] " + e.getMessage());
+            System.err.println("Thử chuyển sang SMTP fallback...");
+            sendEmailViaSmtp(to, subject, html);
+        }
+    }
+
+    private void sendEmailViaSmtp(String to, String subject, String html) {
+        if (mailSender == null) {
+            System.err.println("❌ [LỖI] JavaMailSender chưa được cấu hình!");
+            return;
+        }
+        try {
+            System.out.println("🚀 [SMTP] Đang gửi email tới: " + to);
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(html, true);
+            mailSender.send(message);
+            System.out.println("✅ [SMTP] Gửi thành công tới: " + to);
+        } catch (MessagingException e) {
+            System.err.println("❌ [SMTP LỖI] " + e.getMessage());
         }
     }
 

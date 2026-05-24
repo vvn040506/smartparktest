@@ -43,20 +43,24 @@ public class QRController {
      */
     @PostMapping("/verify")
     public ResponseEntity<ApiResponse<QRVerifyResponse>> verifyQR(
-            @RequestBody Map<String, String> payload) {
+            @RequestBody Map<String, Object> payload) {
         
-        String qrData = payload.get("qrData");
+        String qrData = (String) payload.get("qrData");
+        Boolean isManual = (Boolean) payload.getOrDefault("isManual", false);
+        
+        System.out.println("Received QR Data: " + qrData + " (Manual: " + isManual + ")");
         
         if (qrData == null || qrData.isEmpty()) {
+            System.err.println("QR Data is null or empty!");
             return ResponseEntity.ok(ApiResponse.error("QR data không hợp lệ"));
         }
 
-        // Kiểm tra format
-        if (!qrCodeService.isValidQRData(qrData)) {
-            return ResponseEntity.ok(ApiResponse.error("QR code không hợp lệ"));
+        // Nếu là nhập thủ công hoặc QR data không đúng format chuẩn, thử tìm theo Payment Code
+        if (isManual || !qrCodeService.isValidQRData(qrData)) {
+            return verifyByPaymentCode(qrData);
         }
 
-        // Parse QR data
+        // Parse QR data chuẩn
         Map<String, String> parsed = qrCodeService.parseQRData(qrData);
         String type = parsed.get("type");
 
@@ -165,6 +169,50 @@ public class QRController {
         } catch (Exception e) {
             return ResponseEntity.ok(ApiResponse.error("Lỗi xử lý QR: " + e.getMessage()));
         }
+    }
+
+    /**
+     * Tìm kiếm và verify theo Payment Code (SP... hoặc MP...)
+     */
+    private ResponseEntity<ApiResponse<QRVerifyResponse>> verifyByPaymentCode(String code) {
+        System.out.println("Verifying by Payment Code: " + code);
+        
+        if (code.startsWith("SP")) {
+            // Tìm Booking
+            Booking booking = bookingService.findByPaymentCode(code).orElse(null);
+            if (booking == null) {
+                return ResponseEntity.ok(ApiResponse.error("Không tìm thấy vé với mã: " + code));
+            }
+            
+            QRVerifyResponse response = QRVerifyResponse.success(
+                "booking",
+                booking.getId(),
+                booking.getPaymentCode(),
+                booking.getLicensePlate(),
+                booking.getStatus(),
+                booking
+            );
+            return ResponseEntity.ok(ApiResponse.success("Tìm thấy vé đặt trước", response));
+            
+        } else if (code.startsWith("MP")) {
+            // Tìm MonthlyPass
+            MonthlyPass pass = monthlyPassService.findByPaymentCode(code).orElse(null);
+            if (pass == null) {
+                return ResponseEntity.ok(ApiResponse.error("Không tìm thấy thẻ tháng với mã: " + code));
+            }
+            
+            QRVerifyResponse response = QRVerifyResponse.success(
+                "monthly_pass",
+                pass.getId(),
+                pass.getPaymentCode(),
+                pass.getLicensePlate(),
+                pass.getStatus(),
+                pass
+            );
+            return ResponseEntity.ok(ApiResponse.success("Tìm thấy thẻ tháng", response));
+        }
+        
+        return ResponseEntity.ok(ApiResponse.error("Mã không đúng định dạng (phải bắt đầu bằng SP hoặc MP)"));
     }
 
     /**

@@ -46,4 +46,7 @@ public interface MonthlyPassService {
 
     /** Xóa tất cả thẻ tháng của user */
     void deleteByUserId(Long userId);
+
+    /** Tìm thẻ tháng theo mã thanh toán */
+    Optional<MonthlyPass> findByPaymentCode(String paymentCode);
 }

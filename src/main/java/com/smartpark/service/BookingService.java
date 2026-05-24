@@ -44,4 +44,9 @@ public interface BookingService {
      * Hoàn thành walk-in booking (xe ra, tính tiền)
      */
     Booking completeWalkIn(Long bookingId, Long actualPrice);
+
+    /**
+     * Tìm booking theo mã thanh toán
+     */
+    Optional<Booking> findByPaymentCode(String paymentCode);
 }

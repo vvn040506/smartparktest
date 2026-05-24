@@ -65,17 +65,29 @@ let isScanning = false;
 function startScanner() {
     html5QrCode = new Html5Qrcode("qr-reader");
     
+    const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1.0
+    };
+
+    // Thử dùng camera sau trước, nếu không được thì dùng bất kỳ camera nào
     html5QrCode.start(
-        { facingMode: "environment" }, // Camera sau
-        {
-            fps: 10,
-            qrbox: { width: 250, height: 250 }
-        },
+        { facingMode: "environment" },
+        config,
         onScanSuccess,
         onScanError
     ).catch(err => {
-        console.error("Không thể khởi động camera:", err);
-        showResult('error', 'Không thể truy cập camera. Vui lòng cho phép quyền camera hoặc nhập mã thủ công.');
+        console.warn("Không tìm thấy camera sau, thử camera mặc định:", err);
+        html5QrCode.start(
+            true, // use default camera
+            config,
+            onScanSuccess,
+            onScanError
+        ).catch(err2 => {
+            console.error("Không thể khởi động camera:", err2);
+            showResult('error', 'Không thể truy cập camera. Vui lòng cho phép quyền camera hoặc nhập mã thủ công.');
+        });
     });
 }
 
@@ -243,17 +255,31 @@ async function verifyManualCode() {
         return;
     }
     
-    // Tạo QR data từ mã
-    // Giả sử mã là SP123456 hoặc MP123456
-    // Cần tìm trong database để lấy thông tin đầy đủ
+    // Mã nhập thủ công thường là Payment Code (SP... hoặc MP...)
+    // Nhưng API verify hiện tại yêu cầu full QR data (SMARTPARK_...)
+    // Chúng ta cần một API khác hoặc cho phép backend tìm theo code
     
-    // Tạm thời chỉ verify bằng code
     showResult('info', '🔄 Đang kiểm tra mã ' + code + '...');
     
-    // TODO: Implement API verify by code
-    setTimeout(() => {
-        showResult('error', 'Chức năng nhập thủ công đang phát triển. Vui lòng quét QR.');
-    }, 1000);
+    try {
+        // Thử gửi code trực tiếp, backend sẽ được cập nhật để xử lý
+        const response = await fetch('/api/qr/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ qrData: code, isManual: true })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            showSuccessResult(result.data);
+        } else {
+            showResult('error', '❌ ' + (result.message || 'Mã không hợp lệ'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showResult('error', '❌ Lỗi kết nối server');
+    }
 }
 
 // Khởi động khi trang load

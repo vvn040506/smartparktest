@@ -221,4 +221,9 @@ public class BookingServiceImpl implements BookingService {
         
         return repo.save(booking);
     }
+
+    @Override
+    public Optional<Booking> findByPaymentCode(String paymentCode) {
+        return repo.findByPaymentCode(paymentCode);
+    }
 }

@@ -224,6 +224,11 @@ public class MonthlyPassServiceImpl implements MonthlyPassService {
         repo.deleteByUserId(userId);
     }
 
+    @Override
+    public Optional<MonthlyPass> findByPaymentCode(String paymentCode) {
+        return repo.findByPaymentCode(paymentCode);
+    }
+
     // ── AUTO-EXPIRE ──────────────────────────────────────────────────────────
 
     /**

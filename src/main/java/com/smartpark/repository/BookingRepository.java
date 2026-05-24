@@ -8,6 +8,7 @@ import java.util.Optional;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findAllByOrderByCreatedAtDesc();
     Optional<Booking> findByPaymentCodeAndStatusNot(String paymentCode, String status);
+    Optional<Booking> findByPaymentCode(String paymentCode);
     
     /** Tìm booking theo user */
     List<Booking> findByUserIdOrderByCreatedAtDesc(Long userId);
