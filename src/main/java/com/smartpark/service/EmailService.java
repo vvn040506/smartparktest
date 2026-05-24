@@ -1,10 +1,10 @@
 package com.smartpark.service;
 
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.resend.Resend;
+import com.resend.core.exception.ResendException;
+import com.resend.services.emails.model.CreateEmailOptions;
+import com.resend.services.emails.model.CreateEmailResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -14,32 +14,33 @@ import java.time.format.DateTimeFormatter;
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    @Value("${resend.api.key:}")
+    private String resendApiKey;
 
-    @Value("${spring.mail.username:}")
+    @Value("${app.email.from:onboarding@resend.dev}")
     private String fromEmail;
 
     private void sendEmail(String to, String subject, String html) {
-        if (fromEmail == null || fromEmail.isEmpty() || fromEmail.startsWith("${")) {
-            System.err.println("❌ [LỖI] Chưa cấu hình Gmail trong application-local.properties");
+        if (resendApiKey == null || resendApiKey.isEmpty() || resendApiKey.startsWith("${")) {
+            System.err.println("❌ [LỖI] Chưa cấu hình RESEND_API_KEY");
             return;
         }
         try {
-            System.out.println("🚀 [GMAIL] Đang gửi email tới: " + to);
+            System.out.println("🚀 [RESEND] Đang gửi email tới: " + to);
             
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            
-            helper.setFrom(fromEmail, "SmartPark System");
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(html, true);
+            Resend resend = new Resend(resendApiKey);
 
-            mailSender.send(message);
-            System.out.println("✅ [GMAIL] Gửi thành công tới: " + to);
-        } catch (Exception e) {
-            System.err.println("❌ [GMAIL LỖI] Không thể gửi email!");
+            CreateEmailOptions options = CreateEmailOptions.builder()
+                    .from(fromEmail)
+                    .to(to)
+                    .subject(subject)
+                    .html(html)
+                    .build();
+
+            CreateEmailResponse response = resend.emails().send(options);
+            System.out.println("✅ [RESEND] Gửi thành công tới: " + to + " (ID: " + response.getId() + ")");
+        } catch (ResendException e) {
+            System.err.println("❌ [RESEND LỖI] Không thể gửi email!");
             System.err.println("Lý do: " + e.getMessage());
             e.printStackTrace();
         }
