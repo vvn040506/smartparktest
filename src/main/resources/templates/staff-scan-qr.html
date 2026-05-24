@@ -62,33 +62,56 @@ let html5QrCode;
 let isScanning = false;
 
 // Khởi động camera scanner
-function startScanner() {
+async function startScanner() {
+    if (html5QrCode) {
+        try {
+            await html5QrCode.stop();
+        } catch (e) {}
+    }
+    
     html5QrCode = new Html5Qrcode("qr-reader");
     
+    const qrboxFunction = function(viewfinderWidth, viewfinderHeight) {
+        let minEdgePercentage = 0.7; // 70%
+        let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+        let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+        return {
+            width: qrboxSize,
+            height: qrboxSize
+        };
+    }
+
     const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0
+        fps: 20,
+        qrbox: qrboxFunction,
+        aspectRatio: 1.0,
+        showTorchButtonIfSupported: true
     };
 
-    // Thử dùng camera sau trước, nếu không được thì dùng bất kỳ camera nào
-    html5QrCode.start(
-        { facingMode: "environment" },
-        config,
-        onScanSuccess,
-        onScanError
-    ).catch(err => {
-        console.warn("Không tìm thấy camera sau, thử camera mặc định:", err);
-        html5QrCode.start(
-            true, // use default camera
+    try {
+        // Thử dùng camera sau trước
+        await html5QrCode.start(
+            { facingMode: "environment" },
             config,
             onScanSuccess,
             onScanError
-        ).catch(err2 => {
+        );
+        console.log("Camera started with environment mode");
+    } catch (err) {
+        console.warn("Không tìm thấy camera sau, thử camera mặc định:", err);
+        try {
+            await html5QrCode.start(
+                { facingMode: "user" },
+                config,
+                onScanSuccess,
+                onScanError
+            );
+            console.log("Camera started with user mode");
+        } catch (err2) {
             console.error("Không thể khởi động camera:", err2);
-            showResult('error', 'Không thể truy cập camera. Vui lòng cho phép quyền camera hoặc nhập mã thủ công.');
-        });
-    });
+            showResult('error', 'Không thể truy cập camera. Lỗi: ' + err2 + '. Vui lòng đảm bảo bạn đang dùng HTTPS và đã cấp quyền camera.');
+        }
+    }
 }
 
 // Khi quét thành công
