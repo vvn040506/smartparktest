@@ -22,7 +22,5 @@ public interface AccountService {
     // Password Reset methods
     boolean sendStaffResetLink(String email, String baseUrl);
     
-    String resetStaffPassword(String token, String newPassword);
-    
     String verifyOTPAndReset(String email, String otpCode, String newPassword);
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Random;
 import java.util.UUID;
 
 @Service
@@ -46,34 +47,42 @@ public class UserService {
                 .orElse(null);
     }
 
-    // Gửi email reset mật khẩu
+    // Gửi OTP reset mật khẩu
     @Transactional
-    public boolean sendResetLink(String email, String baseUrl) {
+    public boolean sendResetOTP(String email) {
         return userRepo.findByEmail(email).map(user -> {
             // Xoá token cũ nếu có
             tokenRepo.deleteByUser(user);
 
-            String token = UUID.randomUUID().toString();
+            // Tạo mã OTP 6 số
+            String otp = String.format("%06d", new Random().nextInt(1000000));
+            
             PasswordResetToken prt = new PasswordResetToken();
-            prt.setToken(token);
+            prt.setToken(otp);
             prt.setUser(user);
-            prt.setExpiryDate(LocalDateTime.now().plusMinutes(30));
+            prt.setExpiryDate(LocalDateTime.now().plusMinutes(10)); // OTP hết hạn sau 10 phút
             tokenRepo.save(prt);
 
-            String link = baseUrl + "/reset-password?token=" + token;
-            emailService.sendResetEmail(email, link);
+            emailService.sendUserResetOTP(email, user.getUsername(), otp);
             return true;
         }).orElse(false);
     }
 
-    // Đặt lại mật khẩu
+    // Đặt lại mật khẩu bằng OTP
     @Transactional
-    public String resetPassword(String token, String newPassword) {
-        PasswordResetToken prt = tokenRepo.findByToken(token).orElse(null);
-        if (prt == null) return "Token không hợp lệ";
-        if (prt.getExpiryDate().isBefore(LocalDateTime.now())) return "Token đã hết hạn";
+    public String verifyOTPAndReset(String email, String otpCode, String newPassword) {
+        User user = userRepo.findByEmail(email).orElse(null);
+        if (user == null) return "Email không tồn tại";
 
-        User user = prt.getUser();
+        PasswordResetToken prt = tokenRepo.findByToken(otpCode).orElse(null);
+        if (prt == null || !prt.getUser().getId().equals(user.getId())) {
+            return "Mã OTP không hợp lệ";
+        }
+        
+        if (prt.getExpiryDate().isBefore(LocalDateTime.now())) {
+            return "Mã OTP đã hết hạn";
+        }
+
         user.setPassword(encoder.encode(newPassword));
         userRepo.save(user);
         tokenRepo.delete(prt);

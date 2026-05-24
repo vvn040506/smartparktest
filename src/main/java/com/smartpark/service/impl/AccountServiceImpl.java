@@ -127,30 +127,6 @@ public class AccountServiceImpl implements AccountService {
         return String.valueOf(otp);
     }
 
-    @Override
-    @Transactional
-    public String resetStaffPassword(String token, String newPassword) {
-        com.smartpark.model.AccountVerificationToken resetToken = verificationTokenRepo.findByToken(token).orElse(null);
-        if (resetToken == null) {
-            return "Token không hợp lệ";
-        }
-        if (resetToken.getExpiryDate().isBefore(LocalDateTime.now())) {
-            verificationTokenRepo.delete(resetToken);
-            return "Token đã hết hạn";
-        }
-        
-        StaffAccount account = resetToken.getStaffAccount();
-        if (account == null) {
-            return "Không tìm thấy tài khoản";
-        }
-        
-        account.setPassword(passwordEncoder.encode(newPassword));
-        staffRepo.save(account);
-        verificationTokenRepo.delete(resetToken);
-        
-        return "OK";
-    }
-    
     /**
      * Verify OTP và cho phép reset password
      */

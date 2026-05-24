@@ -90,57 +90,6 @@ public class DashboardController {
         return "redirect:/verify-account-otp";
     }
 
-    // ── VERIFY ACCOUNT (OLD - with token link) ────────────────────────────────────────────────────────
-
-    @GetMapping("/verify-account")
-    public String verifyAccountPage(@RequestParam String token, RedirectAttributes ra) {
-        String result = verificationService.verifyAccount(token);
-        if ("OK".equals(result)) {
-            return "redirect:/set-password?token=" + token;
-        } else {
-            ra.addFlashAttribute("error", result);
-            return "redirect:/login";
-        }
-    }
-
-    // ── SET PASSWORD ──────────────────────────────────────────────────────────
-
-    @GetMapping("/set-password")
-    public String setPasswordPage(@RequestParam String token, Model model) {
-        // Validate token first
-        String validation = verificationService.validateToken(token);
-        if (!"OK".equals(validation)) {
-            model.addAttribute("error", validation);
-            return "login";
-        }
-        model.addAttribute("token", token);
-        return "set-password";
-    }
-
-    @PostMapping("/set-password")
-    public String doSetPassword(@RequestParam String token,
-                                @RequestParam String password,
-                                @RequestParam String confirmPassword,
-                                RedirectAttributes ra) {
-        if (!password.equals(confirmPassword)) {
-            ra.addFlashAttribute("error", "Mật khẩu xác nhận không khớp");
-            return "redirect:/set-password?token=" + token;
-        }
-        
-        if (password.length() < 6) {
-            ra.addFlashAttribute("error", "Mật khẩu phải có ít nhất 6 ký tự");
-            return "redirect:/set-password?token=" + token;
-        }
-        
-        String result = verificationService.setPassword(token, password);
-        if ("OK".equals(result)) {
-            ra.addFlashAttribute("success", "Đặt mật khẩu thành công! Bạn có thể đăng nhập ngay.");
-        } else {
-            ra.addFlashAttribute("error", result);
-        }
-        return "redirect:/login";
-    }
-
     @GetMapping("/map")
     public String publicMap(HttpSession session, Model model) {
         addStatsToModel(model);

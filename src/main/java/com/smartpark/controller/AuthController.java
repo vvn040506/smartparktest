@@ -104,29 +104,40 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public String doForgot(@RequestParam String email,
                            HttpServletRequest request, Model model) {
-        String baseUrl = request.getScheme() + "://" + request.getServerName();
-        boolean sent = userService.sendResetLink(email, baseUrl);
+        boolean sent = userService.sendResetOTP(email);
         // Luôn hiện thông báo thành công (tránh lộ email có tồn tại không)
         model.addAttribute("success",
-            "Nếu email tồn tại, link đặt lại mật khẩu đã được gửi.");
+            "Nếu email tồn tại, mã OTP đặt lại mật khẩu đã được gửi đến email của bạn.");
         return "forgot-password";
     }
 
     // ── RESET PASSWORD (User) ─────────────────────────────────
     @GetMapping("/reset-password")
-    public String resetPage(@RequestParam String token, Model model) {
-        model.addAttribute("token", token);
+    public String resetPage() {
         return "reset-password";
     }
 
     @PostMapping("/reset-password")
-    public String doReset(@RequestParam String token,
+    public String doReset(@RequestParam String email,
+                          @RequestParam String otpCode,
                           @RequestParam String newPassword,
+                          @RequestParam String confirmPassword,
                           Model model) {
-        String result = userService.resetPassword(token, newPassword);
+        if (!newPassword.equals(confirmPassword)) {
+            model.addAttribute("error", "Mật khẩu xác nhận không khớp");
+            return "reset-password";
+        }
+        
+        if (newPassword.length() < 6) {
+            model.addAttribute("error", "Mật khẩu phải có ít nhất 6 ký tự");
+            return "reset-password";
+        }
+
+        String result = userService.verifyOTPAndReset(email, otpCode, newPassword);
         if ("OK".equals(result)) return "redirect:/login?reset=true";
+        
         model.addAttribute("error", result);
-        model.addAttribute("token", token);
+        model.addAttribute("email", email);
         return "reset-password";
     }
 

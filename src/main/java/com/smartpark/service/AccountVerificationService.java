@@ -60,18 +60,6 @@ public class AccountVerificationService {
         }
     }
 
-    public void sendVerificationEmail(StaffAccount account, String baseUrl) {
-        try {
-            String token = createVerificationToken(account);
-            String verifyLink = baseUrl + "/verify-account?token=" + token;
-            emailService.sendAccountVerificationEmail(account.getEmail(), verifyLink, account.getUsername());
-            System.out.println("✓ Email xác nhận đã được gửi đến: " + account.getEmail());
-        } catch (Exception e) {
-            System.err.println("✗ Lỗi gửi email xác nhận: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
     @Transactional
     public String createVerificationOTP(StaffAccount account) {
         tokenRepo.deleteByStaffAccount(account);
@@ -114,21 +102,6 @@ public class AccountVerificationService {
         java.security.SecureRandom random = new java.security.SecureRandom();
         int otp = 100000 + random.nextInt(900000);
         return String.valueOf(otp);
-    }
-
-    @Transactional
-    public String createVerificationToken(StaffAccount account) {
-        tokenRepo.deleteByStaffAccount(account);
-        tokenRepo.flush(); // ← FIX: flush để tránh duplicate key
-
-        String token = UUID.randomUUID().toString();
-        AccountVerificationToken vt = new AccountVerificationToken();
-        vt.setToken(token);
-        vt.setStaffAccount(account);
-        vt.setExpiryDate(LocalDateTime.now().plusMinutes(5));
-        tokenRepo.save(vt);
-
-        return token;
     }
 
     @Transactional
@@ -204,42 +177,6 @@ public class AccountVerificationService {
 
         vt.setOtpUsed(true);
         tokenRepo.save(vt);
-
-        return "OK";
-    }
-
-    @Transactional
-    public String verifyAccount(String token) {
-        AccountVerificationToken vt = tokenRepo.findByToken(token).orElse(null);
-        if (vt == null) return "Token không hợp lệ";
-        if (vt.getExpiryDate().isBefore(LocalDateTime.now())) {
-            StaffAccount account = vt.getStaffAccount();
-            tokenRepo.delete(vt);
-            if (!account.isVerified()) staffRepo.delete(account);
-            return "Token đã hết hạn";
-        }
-        return "OK";
-    }
-
-    public String validateToken(String token) {
-        AccountVerificationToken vt = tokenRepo.findByToken(token).orElse(null);
-        if (vt == null) return "Token không hợp lệ";
-        if (vt.getExpiryDate().isBefore(LocalDateTime.now())) return "Token đã hết hạn";
-        return "OK";
-    }
-
-    @Transactional
-    public String setPassword(String token, String newPassword) {
-        AccountVerificationToken vt = tokenRepo.findByToken(token).orElse(null);
-        if (vt == null) return "Token không hợp lệ";
-        if (vt.getExpiryDate().isBefore(LocalDateTime.now())) return "Token đã hết hạn";
-
-        StaffAccount account = vt.getStaffAccount();
-        account.setPassword(passwordEncoder.encode(newPassword));
-        account.setVerified(true);
-        account.setActive(true);
-        staffRepo.save(account);
-        tokenRepo.delete(vt);
 
         return "OK";
     }
