@@ -1,5 +1,6 @@
 package com.smartpark.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,6 +8,7 @@ import java.time.LocalDateTime;
 
 @Entity @Table(name = "bookings")
 @Data @NoArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Booking {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

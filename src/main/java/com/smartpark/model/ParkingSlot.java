@@ -1,11 +1,13 @@
 package com.smartpark.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity @Table(name = "parking_slots")
 @Data @NoArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ParkingSlot {
 
     @Id
