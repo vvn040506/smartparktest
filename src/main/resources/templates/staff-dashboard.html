@@ -114,7 +114,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);display:flex
     <a class="nav-item" onclick="showTab('checkin')"><span class="nav-icon">🚗</span> Xe vào</a>
     <a class="nav-item" onclick="showTab('checkout')"><span class="nav-icon">🚪</span> Xe ra</a>
     <a class="nav-item" onclick="showTab('search')"><span class="nav-icon">🔍</span> Tra cứu xe</a>
-    <a class="nav-item" onclick="showTab('monthly')"><span class="nav-icon">📅</span> Thẻ tháng</a>
     <a class="nav-item" href="/staff/scan-qr"><span class="nav-icon">📷</span> Quét QR Camera</a>
   </nav>
   <div class="sidebar-footer">
@@ -245,42 +244,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);display:flex
       </div>
     </div>
 
-    <!-- TAB: MONTHLY PASS -->
-    <div class="tab-view" id="tab-monthly">
-      <div class="map-card">
-        <div class="map-card-title" style="margin-bottom:14px">📅 Kiểm Tra Thẻ Tháng</div>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Nhập biển số để kiểm tra xe có thẻ tháng hợp lệ không</p>
-        <div style="display:flex;gap:10px;margin-bottom:16px">
-          <input type="text" id="mp-plate" placeholder="VD: 51A-12345"
-                 style="flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;text-transform:uppercase"
-                 onkeydown="if(event.key==='Enter') checkMonthlyPass()">
-          <button onclick="checkMonthlyPass()"
-                  style="background:var(--accent);color:white;border:none;border-radius:10px;padding:10px 20px;font-family:var(--font);font-weight:700;font-size:14px;cursor:pointer">
-            Kiểm tra
-          </button>
-          <button onclick="window.location.href='/staff/scan-qr'"
-                  style="background:var(--surface2);color:var(--accent);border:1.5px solid var(--accent);border-radius:10px;padding:10px 20px;font-family:var(--font);font-weight:700;font-size:14px;cursor:pointer">
-            📷 Quét QR
-          </button>
-        </div>
-        <div id="mp-result"></div>
-      </div>
-
-      <div class="map-card" style="margin-top:16px">
-        <div class="map-card-title" style="margin-bottom:14px">📋 Hướng dẫn thẻ tháng</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.8">
-          <div>✅ Xe có thẻ tháng hợp lệ: <strong style="color:var(--green)">Cho vào không thu phí</strong></div>
-          <div>⏳ Thẻ chờ thanh toán: <strong style="color:var(--yellow)">Yêu cầu thanh toán trước</strong></div>
-          <div>❌ Không có thẻ: <strong style="color:var(--red)">Tính phí theo giờ bình thường</strong></div>
-          <div style="margin-top:10px">
-            <a href="/the-thang" target="_blank"
-               style="color:var(--accent);font-weight:600;text-decoration:none">
-              → Trang đăng ký thẻ tháng cho khách
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
 
   </div>
 </div>
@@ -412,9 +375,9 @@ function showTab(name) {
   document.querySelectorAll('.tab-view').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  const titles = { map:'Sơ Đồ Bãi Xe', checkin:'Xe Vào', checkout:'Xe Ra', search:'Tra Cứu Xe', monthly:'Thẻ Tháng' };
+  const titles = { map:'Sơ Đồ Bãi Xe', checkin:'Xe Vào', checkout:'Xe Ra', search:'Tra Cứu Xe' };
   document.getElementById('page-title').textContent = titles[name] || name;
-  const navMap = { map:0, checkin:1, checkout:2, search:3, monthly:4 };
+  const navMap = { map:0, checkin:1, checkout:2, search:3 };
   const items = document.querySelectorAll('.nav-item');
   if (items[navMap[name]]) items[navMap[name]].classList.add('active');
   if (name === 'map') loadAndRenderMap();
@@ -495,40 +458,6 @@ setInterval(updateClock, 1000);
 loadAndRenderMap();
 setInterval(loadAndRenderMap, 15000);
 
-async function checkMonthlyPass() {
-  const plate = document.getElementById('mp-plate').value.trim().toUpperCase();
-  const result = document.getElementById('mp-result');
-  if (!plate) { result.innerHTML = '<div style="color:var(--red);font-size:13px">Vui lòng nhập biển số</div>'; return; }
-
-  result.innerHTML = '<div style="color:var(--muted);font-size:13px">Đang kiểm tra...</div>';
-  try {
-    const res  = await fetch('/api/monthly-passes/check?plate=' + encodeURIComponent(plate));
-    const data = await res.json();
-    const info = data.data;
-    if (info && info.hasPass && info.pass) {
-      const p = info.pass;
-      const endDate = new Date(p.endDate).toLocaleDateString('vi');
-      result.innerHTML = `
-        <div style="background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);border-radius:10px;padding:14px">
-          <div style="color:var(--green);font-weight:700;font-size:14px;margin-bottom:8px">✅ Có thẻ tháng hợp lệ</div>
-          <div style="font-size:13px;font-family:var(--mono)">
-            <div>Chủ xe: <strong>${p.ownerName}</strong></div>
-            <div>Biển số: <strong style="color:var(--accent)">${p.licensePlate}</strong></div>
-            <div>Loại xe: <strong>${p.vehicleType === 'o_to' ? '🚗 Ô tô' : '🏍️ Xe máy'}</strong></div>
-            <div>Hiệu lực đến: <strong style="color:var(--green)">${endDate}</strong></div>
-          </div>
-        </div>`;
-    } else {
-      result.innerHTML = `
-        <div style="background:rgba(255,61,90,.1);border:1px solid rgba(255,61,90,.3);border-radius:10px;padding:14px">
-          <div style="color:var(--red);font-weight:700;font-size:14px">❌ Không có thẻ tháng hợp lệ</div>
-          <div style="font-size:13px;color:var(--muted);margin-top:4px">Biển số <strong>${plate}</strong> không có thẻ tháng đang hiệu lực. Tính phí theo giờ bình thường.</div>
-        </div>`;
-    }
-  } catch(e) {
-    result.innerHTML = '<div style="color:var(--red);font-size:13px">Lỗi kết nối server</div>';
-  }
-}
 </script>
 </body>
 </html>
