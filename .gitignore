@@ -8,3 +8,6 @@
 
 # Thư mục chứa cấu hình local có chứa API Key cá nhân
 /src/main/resources/application-local.properties
+
+# Loại bỏ tất cả các file tài liệu .md theo yêu cầu
+*.md
