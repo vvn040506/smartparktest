@@ -1,0 +1,10 @@
+# Project exclude paths
+/target/
+/data/
+*.log
+.idea/
+.vscode/
+.kiro/
+
+# Thư mục chứa cấu hình local có chứa API Key cá nhân
+/src/main/resources/application-local.properties

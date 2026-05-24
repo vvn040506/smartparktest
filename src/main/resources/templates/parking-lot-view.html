@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xem Bãi Đỗ Xe - SmartPark</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .slot {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 3px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .slot.empty {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        .slot.occupied {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        .slot.reserved {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+        .stats-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .zone-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .legend-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            border: 2px solid;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="text-center text-white mb-4">
+            <h1><i class="bi bi-map"></i> Sơ Đồ Bãi Đỗ Xe</h1>
+            <p>Xem tình trạng bãi đỗ xe real-time</p>
+            <p class="small">Cập nhật tự động mỗi 30 giây</p>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="stats-card text-center">
+                    <div class="stats-number" th:text="${total}">80</div>
+                    <div class="text-muted">Tổng số chỗ</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card text-center">
+                    <div class="stats-number text-success" th:text="${empty}">35</div>
+                    <div class="text-muted">Chỗ trống</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card text-center">
+                    <div class="stats-number text-danger" th:text="${filled}">45</div>
+                    <div class="text-muted">Đã đỗ</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-box empty"></div>
+                        <span>Trống</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box occupied"></div>
+                        <span>Đã đỗ</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-box reserved"></div>
+                        <span>Đã đặt</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing Info -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-cash-coin"></i> Bảng Giá</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-bicycle"></i> Xe máy</h6>
+                        <ul>
+                            <li>Đỗ thường: <strong>10,000 đ/giờ</strong></li>
+                            <li>Đặt trước: <strong>20,000 đ/12 giờ</strong></li>
+                            <li>Thẻ tháng: <strong>200,000 đ/tháng</strong></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-car-front"></i> Ô tô</h6>
+                        <ul>
+                            <li>Đỗ thường: <strong>20,000 đ/giờ</strong></li>
+                            <li>Đặt trước: <strong>40,000 đ/12 giờ</strong></li>
+                            <li>Thẻ tháng: <strong>500,000 đ/tháng</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Motorbike Zone -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="zone-title text-center">
+                    <h4><i class="bi bi-bicycle"></i> Khu Xe Máy</h4>
+                    <p class="mb-0">
+                        Trống: <span th:text="${motoEmpty}">23</span> / 
+                        Tổng: <span th:text="${motoTotal}">50</span>
+                    </p>
+                </div>
+                
+                <div th:each="row : ${motoRows}" class="mb-3">
+                    <div class="text-center mb-2">
+                        <strong>Dãy <span th:text="${row}">A</span></strong>
+                    </div>
+                    <div class="text-center">
+                        <th:block th:each="i : ${#numbers.sequence(1, 10)}">
+                            <th:block th:with="slotId=${'M-' + row + '-' + (#strings.toString(i).length() == 1 ? '0' + i : i)}">
+                                <th:block th:each="slot : ${motoSlots}">
+                                    <span th:if="${slot.id == slotId}"
+                                          th:class="${'slot ' + (slot.occupied ? 'occupied' : (slot.reserved ? 'reserved' : 'empty'))}"
+                                          th:text="${slotId}">M-A-01</span>
+                                </th:block>
+                            </th:block>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Car Zone -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="zone-title text-center">
+                    <h4><i class="bi bi-car-front"></i> Khu Ô Tô</h4>
+                    <p class="mb-0">
+                        Trống: <span th:text="${carEmpty}">12</span> / 
+                        Tổng: <span th:text="${carTotal}">30</span>
+                    </p>
+                </div>
+                
+                <div th:each="row : ${carRows}" class="mb-3">
+                    <div class="text-center mb-2">
+                        <strong>Dãy <span th:text="${row}">A</span></strong>
+                    </div>
+                    <div class="text-center">
+                        <th:block th:each="i : ${#numbers.sequence(1, 10)}">
+                            <th:block th:with="slotId=${'C-' + row + '-' + (#strings.toString(i).length() == 1 ? '0' + i : i)}">
+                                <th:block th:each="slot : ${carSlots}">
+                                    <span th:if="${slot.id == slotId}"
+                                          th:class="${'slot ' + (slot.occupied ? 'occupied' : (slot.reserved ? 'reserved' : 'empty'))}"
+                                          th:text="${slotId}">C-A-01</span>
+                                </th:block>
+                            </th:block>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CTA Buttons -->
+        <div class="card">
+            <div class="card-body text-center">
+                <h5 class="mb-3">Muốn đặt chỗ trước?</h5>
+                <a href="/login" class="btn btn-primary btn-lg me-2">
+                    <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
+                </a>
+                <a href="/register" class="btn btn-success btn-lg">
+                    <i class="bi bi-person-plus"></i> Đăng ký
+                </a>
+            </div>
+        </div>
+
+        <!-- Back Button -->
+        <div class="text-center mt-3">
+            <a href="/" class="btn btn-light">
+                <i class="bi bi-arrow-left"></i> Trang chủ
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto refresh every 30 seconds
+        setInterval(function() {
+            location.reload();
+        }, 30000);
+    </script>
+</body>
+</html>

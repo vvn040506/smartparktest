@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPark – Thẻ tháng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+        .navbar { background: #0d1b2a; }
+        .card  { border: none; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
+        .card-header { background: #0d1b2a; color: white;
+                       border-radius: 16px 16px 0 0 !important; padding: 16px 24px; font-weight: 600; }
+        .info-row { display:flex; justify-content:space-between; align-items:center;
+                    padding: 11px 0; border-bottom: 1px solid #f0f0f0; font-size:14px; }
+        .info-row:last-child { border-bottom: none; }
+        .info-key { color: #6b778c; }
+        .info-val { font-weight: 600; }
+        .amount   { font-size: 24px; color: #6c3483; font-family: monospace; }
+        .qr-wrap  { background: white; border-radius: 12px; padding: 16px;
+                    display: inline-block; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+        .qr-wrap img { width: 200px; height: 200px; display: block; }
+        .payment-code {
+            font-family: monospace; font-size: 28px; font-weight: 700;
+            letter-spacing: 6px; color: #6c3483;
+            background: #f3e5f5; padding: 12px 24px; border-radius: 10px;
+            display: inline-block;
+        }
+        .badge-pending  { background: #fff7e6; color: #974f0c; border: 1px solid #ffd48a; }
+        .badge-active   { background: #e3fcef; color: #00875a; border: 1px solid #abe2c7; }
+        .badge-expired  { background: #f4f5f7; color: #6b778c; border: 1px solid #dfe1e6; }
+        .badge-cancelled{ background: #ffebe6; color: #bf2600; border: 1px solid #ffbdad; }
+        .hint-box { background: #fffbf0; border: 1px solid #ffd48a;
+                    border-radius: 10px; padding: 14px; font-size: 13px; color: #974f0c; }
+        .pass-card-active {
+            background: linear-gradient(135deg, #1a2332 0%, #6c3483 100%);
+            color: white; border-radius: 16px; padding: 28px; margin-bottom: 16px;
+            position: relative; overflow: hidden;
+        }
+        .pass-card-active::after {
+            content: '🅿'; position: absolute; right: 20px; top: 50%;
+            transform: translateY(-50%); font-size: 80px; opacity: 0.1;
+        }
+        .pass-plate { font-size: 32px; font-weight: 800; letter-spacing: 4px; font-family: monospace; }
+        .pass-name  { font-size: 14px; opacity: 0.8; margin-top: 4px; }
+        .pass-dates { font-size: 13px; opacity: 0.7; margin-top: 12px; font-family: monospace; }
+        .pass-status-badge {
+            display: inline-block; background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4); border-radius: 20px;
+            padding: 4px 14px; font-size: 12px; font-weight: 700; margin-top: 10px;
+        }
+        .success-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5); z-index: 999;
+            align-items: center; justify-content: center;
+        }
+        .success-overlay.show { display: flex; }
+        .success-box {
+            background: white; border-radius: 20px; padding: 40px 32px; text-align: center;
+            max-width: 360px; width: 90%;
+            animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        @keyframes popIn { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark px-4 py-3">
+    <a class="navbar-brand fw-bold text-decoration-none" href="/">🅿️ SmartPark</a>
+    <span class="text-white-50" style="font-size:13px">Thẻ tháng</span>
+</nav>
+
+<div class="container py-4" style="max-width:520px">
+
+    <!-- Thẻ hiển thị khi ACTIVE -->
+    <div th:if="${pass.status == 'ACTIVE'}" class="pass-card-active">
+        <div style="font-size:12px;opacity:0.6;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
+            🎫 Thẻ tháng SmartPark
+        </div>
+        <div class="pass-plate" th:text="${pass.licensePlate}">51A-12345</div>
+        <div class="pass-name" th:text="${pass.ownerName}">Nguyễn Văn A</div>
+        <div class="pass-dates"
+             th:text="${#temporals.format(pass.startDate,'dd/MM/yyyy')} + ' → ' + ${#temporals.format(pass.endDate,'dd/MM/yyyy')}">
+        </div>
+        <div class="pass-status-badge">✓ ĐANG HIỆU LỰC</div>
+    </div>
+
+    <!-- Thông tin chi tiết -->
+    <div class="card mb-3">
+        <div class="card-header">
+            🎫 Thẻ tháng #<span th:text="${pass.id}"></span>
+            &nbsp;
+            <span class="badge rounded-pill"
+                  th:classappend="${pass.status == 'ACTIVE'} ? 'badge-active' :
+                                  (${pass.status == 'PENDING'} ? 'badge-pending' :
+                                  (${pass.status == 'EXPIRED'} ? 'badge-expired' : 'badge-cancelled'))"
+                  th:text="${pass.status == 'ACTIVE'} ? '✓ Đang hiệu lực' :
+                            (${pass.status == 'PENDING'} ? '⏳ Chờ thanh toán' :
+                            (${pass.status == 'EXPIRED'} ? '⌛ Hết hạn' : '✗ Đã huỷ'))">
+            </span>
+        </div>
+        <div class="card-body px-4">
+            <div class="info-row">
+                <span class="info-key">Chủ xe</span>
+                <span class="info-val" th:text="${pass.ownerName}"></span>
+            </div>
+            <div class="info-row" th:if="${pass.email != null and !#strings.isEmpty(pass.email)}">
+                <span class="info-key">Email</span>
+                <span class="info-val" th:text="${pass.email}"></span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">Biển số xe</span>
+                <span class="info-val" th:text="${pass.licensePlate}"></span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">Loại xe</span>
+                <span class="info-val" th:text="${pass.vehicleType == 'o_to'} ? '🚗 Ô tô' : '🏍️ Xe máy'"></span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">Hiệu lực từ</span>
+                <span class="info-val" th:text="${#temporals.format(pass.startDate,'dd/MM/yyyy')}"></span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">Hiệu lực đến</span>
+                <span class="info-val" th:text="${#temporals.format(pass.endDate,'dd/MM/yyyy')}"></span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">Số tiền</span>
+                <span class="info-val amount"
+                      th:text="${#numbers.formatInteger(pass.amountDue, 0, 'COMMA') + ' đ'}"></span>
+            </div>
+            <div class="info-row" th:if="${pass.note != null and !#strings.isEmpty(pass.note)}">
+                <span class="info-key">Ghi chú</span>
+                <span class="info-val" th:text="${pass.note}"></span>
+            </div>
+            <div class="info-row" th:if="${pass.paidAt != null}">
+                <span class="info-key">Thanh toán lúc</span>
+                <span class="info-val" th:text="${#temporals.format(pass.paidAt,'HH:mm dd/MM/yyyy')}"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Thanh toán (chỉ hiện khi PENDING) -->
+    <div th:if="${pass.status == 'PENDING'}">
+        <div class="card mb-3">
+            <div class="card-header">💳 Thanh toán để kích hoạt thẻ</div>
+            <div class="card-body p-4 text-center">
+                <div class="mb-3">
+                    <div class="qr-wrap">
+                        <img th:src="${qrUrl}" alt="QR VietQR"
+                             onerror="this.src='https://placehold.co/200x200?text=QR+Code'">
+                    </div>
+                    <div class="mt-2 text-muted" style="font-size:12px">Quét bằng app ngân hàng bất kỳ</div>
+                </div>
+                <hr>
+                <div class="mb-3">
+                    <div class="text-muted mb-1" style="font-size:12px;text-transform:uppercase;letter-spacing:1px">
+                        Nội dung chuyển khoản
+                    </div>
+                    <div class="payment-code" th:text="${pass.paymentCode}">MPXXXXXX</div>
+                    <div class="text-danger mt-2" style="font-size:12px">
+                        ⚠️ Nhập ĐÚNG nội dung này để tự động kích hoạt thẻ
+                    </div>
+                </div>
+                <div class="hint-box text-start">
+                    <div class="fw-bold mb-1">Thông tin chuyển khoản:</div>
+                    <div>🏦 Ngân hàng: <strong th:text="${bankName}"></strong></div>
+                    <div>💳 Số TK: <strong th:text="${bankAccount}"></strong></div>
+                    <div>👤 Tên TK: <strong th:text="${bankOwner}"></strong></div>
+                    <div>💰 Số tiền: <strong th:text="${#numbers.formatInteger(pass.amountDue,0,'COMMA') + ' đ'}"></strong></div>
+                    <div>📝 Nội dung: <strong th:text="${pass.paymentCode}"></strong></div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center text-muted mb-4" style="font-size:13px" id="polling-msg">
+            🔄 Đang chờ xác nhận thanh toán...
+        </div>
+    </div>
+
+    <!-- Đã kích hoạt -->
+    <div th:if="${pass.status == 'ACTIVE'}" class="card mb-3">
+        <div class="card-body p-4 text-center">
+            <div style="font-size:48px">✅</div>
+            <h5 class="fw-bold text-success mt-2">Thẻ đang hiệu lực!</h5>
+            <p class="text-muted" style="font-size:13px">Xe của bạn được ra vào tự do đến hết ngày
+                <strong th:text="${#temporals.format(pass.endDate,'dd/MM/yyyy')}"></strong>
+            </p>
+            
+            <!-- QR Code thẻ tháng -->
+            <div th:if="${passQR != null}" class="mt-4">
+                <hr>
+                <h6 class="fw-bold mb-3">🎫 QR Code thẻ tháng của bạn</h6>
+                <div class="qr-wrap">
+                    <img th:src="${passQR}" alt="QR Thẻ tháng" style="width:250px;height:250px">
+                </div>
+                <p class="mt-3 text-muted" style="font-size:13px">
+                    📱 Chụp màn hình hoặc lưu ảnh này<br>
+                    Xuất trình khi vào bãi xe
+                </p>
+                <button class="btn btn-primary mt-2" onclick="downloadQR()">
+                    💾 Tải QR Code
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script th:if="${passQR != null}">
+    function downloadQR() {
+        const link = document.createElement('a');
+        link.href = /*[[${passQR}]]*/ '';
+        link.download = 'the-thang-' + /*[[${pass.paymentCode}]]*/ '' + '.png';
+        link.click();
+    }
+    </script>
+
+    <a href="/the-thang" class="btn btn-outline-secondary w-100 mb-2">← Đăng ký thẻ tháng mới</a>
+    <a href="/" class="btn btn-outline-secondary w-100">← Trang chủ</a>
+</div>
+
+<!-- Popup kích hoạt thành công -->
+<div class="success-overlay" id="success-overlay">
+    <div class="success-box">
+        <div style="font-size:64px">🎉</div>
+        <div style="font-size:20px;font-weight:700;color:#00875a;margin-bottom:8px">Thẻ đã được kích hoạt!</div>
+        <div style="font-size:14px;color:#6b778c;margin-bottom:24px">
+            Xe của bạn có thể ra vào tự do trong suốt thời gian hiệu lực.
+        </div>
+        <button class="btn btn-success w-100" onclick="location.reload()">Xem thẻ</button>
+    </div>
+</div>
+
+<script th:if="${pass.status == 'PENDING'}" th:inline="javascript">
+    const passId = /*[[${pass.id}]]*/ 0;
+    const interval = setInterval(async () => {
+        try {
+            const res  = await fetch(`/api/monthly-passes/${passId}`);
+            const data = await res.json();
+            if (data.data && data.data.status === 'ACTIVE') {
+                clearInterval(interval);
+                document.getElementById('success-overlay').classList.add('show');
+            }
+        } catch(e) {}
+    }, 3000);
+</script>
+</body>
+</html>

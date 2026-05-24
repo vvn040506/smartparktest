@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPark – Quét QR</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 0; }
+        .navbar { background: #0d1b2a; color: white; padding: 16px; }
+        .scanner-container { max-width: 600px; margin: 20px auto; padding: 20px; }
+        .card { border: none; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .card-header { background: #0d1b2a; color: white; padding: 16px; font-weight: 600; border-radius: 16px 16px 0 0; }
+        #qr-reader { border-radius: 12px; overflow: hidden; }
+        .result-box { padding: 20px; border-radius: 12px; margin-top: 20px; }
+        .result-success { background: #e3fcef; border: 2px solid #00875a; }
+        .result-error { background: #ffebe6; border: 2px solid #bf2600; }
+        .result-info { background: #e8f0fe; border: 2px solid #1b4f8a; }
+        .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #ddd; }
+        .info-row:last-child { border-bottom: none; }
+        .btn-large { padding: 16px; font-size: 18px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="navbar">
+    <div class="container">
+        <h4 class="m-0">🅿️ SmartPark - Quét QR</h4>
+    </div>
+</div>
+
+<div class="scanner-container">
+    <div class="card">
+        <div class="card-header">📷 Quét QR Code</div>
+        <div class="card-body">
+            <!-- Camera Scanner -->
+            <div id="qr-reader" style="width:100%"></div>
+            
+            <!-- Hoặc nhập thủ công -->
+            <div class="mt-4">
+                <label class="form-label fw-bold">Hoặc nhập mã thủ công:</label>
+                <div class="input-group">
+                    <input type="text" id="manual-code" class="form-control" 
+                           placeholder="SP123456 hoặc MP123456">
+                    <button class="btn btn-primary" onclick="verifyManualCode()">
+                        Kiểm tra
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kết quả -->
+    <div id="result-container"></div>
+</div>
+
+<!-- HTML5 QR Code Scanner -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+let html5QrCode;
+let isScanning = false;
+
+// Khởi động camera scanner
+function startScanner() {
+    html5QrCode = new Html5Qrcode("qr-reader");
+    
+    html5QrCode.start(
+        { facingMode: "environment" }, // Camera sau
+        {
+            fps: 10,
+            qrbox: { width: 250, height: 250 }
+        },
+        onScanSuccess,
+        onScanError
+    ).catch(err => {
+        console.error("Không thể khởi động camera:", err);
+        showResult('error', 'Không thể truy cập camera. Vui lòng cho phép quyền camera hoặc nhập mã thủ công.');
+    });
+}
+
+// Khi quét thành công
+function onScanSuccess(decodedText, decodedResult) {
+    if (isScanning) return; // Tránh quét nhiều lần
+    
+    isScanning = true;
+    console.log("QR scanned:", decodedText);
+    
+    // Dừng scanner tạm thời
+    html5QrCode.pause();
+    
+    // Verify QR
+    verifyQR(decodedText);
+}
+
+function onScanError(errorMessage) {
+    // Bỏ qua lỗi quét thông thường
+}
+
+// Verify QR code qua API
+async function verifyQR(qrData) {
+    try {
+        showResult('info', '🔄 Đang kiểm tra...');
+        
+        const response = await fetch('/api/qr/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ qrData: qrData })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            showSuccessResult(result.data);
+        } else {
+            showResult('error', '❌ ' + (result.message || 'QR không hợp lệ'));
+            setTimeout(() => {
+                html5QrCode.resume();
+                isScanning = false;
+            }, 3000);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showResult('error', '❌ Lỗi kết nối server');
+        setTimeout(() => {
+            html5QrCode.resume();
+            isScanning = false;
+        }, 3000);
+    }
+}
+
+// Hiển thị kết quả thành công
+function showSuccessResult(data) {
+    const type = data.type === 'booking' ? 'Vé đặt trước' : 'Thẻ tháng';
+    const icon = data.type === 'booking' ? '🎫' : '🎟️';
+    
+    let html = `
+        <div class="result-box result-success">
+            <div style="font-size:48px;text-align:center;margin-bottom:16px">✅</div>
+            <h4 class="text-center text-success fw-bold mb-3">${icon} ${type} hợp lệ!</h4>
+            
+            <div class="info-row">
+                <span>Mã:</span>
+                <strong>${data.code}</strong>
+            </div>
+            <div class="info-row">
+                <span>Biển số:</span>
+                <strong style="font-size:20px;color:#0d1b2a">${data.licensePlate}</strong>
+            </div>
+            <div class="info-row">
+                <span>Trạng thái:</span>
+                <strong class="text-success">${data.status}</strong>
+            </div>
+    `;
+    
+    if (data.details) {
+        if (data.type === 'booking') {
+            html += `
+                <div class="info-row">
+                    <span>Khách hàng:</span>
+                    <strong>${data.details.customerName || '-'}</strong>
+                </div>
+                <div class="info-row">
+                    <span>Loại xe:</span>
+                    <strong>${data.details.vehicleType === 'o_to' ? '🚗 Ô tô' : '🏍️ Xe máy'}</strong>
+                </div>
+            `;
+            if (data.details.slotId) {
+                html += `
+                    <div class="info-row">
+                        <span>Vị trí:</span>
+                        <strong>${data.details.slotId}</strong>
+                    </div>
+                `;
+            }
+        } else if (data.type === 'monthly_pass') {
+            html += `
+                <div class="info-row">
+                    <span>Chủ xe:</span>
+                    <strong>${data.details.ownerName || '-'}</strong>
+                </div>
+                <div class="info-row">
+                    <span>Loại xe:</span>
+                    <strong>${data.details.vehicleType === 'o_to' ? '🚗 Ô tô' : '🏍️ Xe máy'}</strong>
+                </div>
+                <div class="info-row">
+                    <span>Hết hạn:</span>
+                    <strong>${new Date(data.details.endDate).toLocaleDateString('vi-VN')}</strong>
+                </div>
+            `;
+        }
+    }
+    
+    html += `
+            <button class="btn btn-success btn-large w-100 mt-4" onclick="confirmEntry()">
+                ✓ Cho xe vào
+            </button>
+            <button class="btn btn-outline-secondary w-100 mt-2" onclick="resetScanner()">
+                Quét QR khác
+            </button>
+        </div>
+    `;
+    
+    document.getElementById('result-container').innerHTML = html;
+}
+
+// Hiển thị kết quả chung
+function showResult(type, message) {
+    const className = type === 'success' ? 'result-success' : 
+                     type === 'error' ? 'result-error' : 'result-info';
+    
+    const html = `
+        <div class="result-box ${className}">
+            <p class="mb-0 text-center fw-bold">${message}</p>
+        </div>
+    `;
+    
+    document.getElementById('result-container').innerHTML = html;
+}
+
+// Xác nhận cho xe vào
+function confirmEntry() {
+    showResult('success', '✅ Đã xác nhận! Xe được phép vào.');
+    setTimeout(resetScanner, 2000);
+}
+
+// Reset scanner
+function resetScanner() {
+    document.getElementById('result-container').innerHTML = '';
+    document.getElementById('manual-code').value = '';
+    isScanning = false;
+    if (html5QrCode) {
+        html5QrCode.resume();
+    }
+}
+
+// Verify mã nhập thủ công
+async function verifyManualCode() {
+    const code = document.getElementById('manual-code').value.trim();
+    
+    if (!code) {
+        showResult('error', 'Vui lòng nhập mã');
+        return;
+    }
+    
+    // Tạo QR data từ mã
+    // Giả sử mã là SP123456 hoặc MP123456
+    // Cần tìm trong database để lấy thông tin đầy đủ
+    
+    // Tạm thời chỉ verify bằng code
+    showResult('info', '🔄 Đang kiểm tra mã ' + code + '...');
+    
+    // TODO: Implement API verify by code
+    setTimeout(() => {
+        showResult('error', 'Chức năng nhập thủ công đang phát triển. Vui lòng quét QR.');
+    }, 1000);
+}
+
+// Khởi động khi trang load
+window.onload = function() {
+    startScanner();
+};
+</script>
+
+</body>
+</html>
