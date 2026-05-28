@@ -226,4 +226,12 @@ public class BookingServiceImpl implements BookingService {
     public Optional<Booking> findByPaymentCode(String paymentCode) {
         return repo.findByPaymentCode(paymentCode);
     }
+
+    @Override
+    public void cancel(Long bookingId) {
+        repo.findById(bookingId).ifPresent(b -> {
+            b.setStatus("CANCELLED");
+            repo.save(b);
+        });
+    }
 }

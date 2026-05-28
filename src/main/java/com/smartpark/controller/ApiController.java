@@ -8,21 +8,23 @@ import com.smartpark.dto.request.LoginRequest;
 import com.smartpark.dto.request.UpdateAccountRequest;
 import com.smartpark.dto.response.ApiResponse;
 import com.smartpark.dto.response.MonthlyPassResponse;
+import com.smartpark.dto.request.*;
+import com.smartpark.dto.response.ApiResponse;
+import com.smartpark.dto.response.MonthlyPassResponse;
 import com.smartpark.dto.response.StaffAccountResponse;
-import com.smartpark.model.Booking;
-import com.smartpark.model.MonthlyPass;
-import com.smartpark.model.ParkingSlot;
-import com.smartpark.model.StaffAccount;
+import com.smartpark.model.*;
 import com.smartpark.repository.BookingRepository;
 import com.smartpark.repository.StaffAccountRepository;
-import com.smartpark.service.BookingService;
-import com.smartpark.service.MonthlyPassService;
-import com.smartpark.service.ParkingService;
+import com.smartpark.service.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -36,16 +38,22 @@ public class ApiController {
     private final BookingRepository bookingRepo;
     private final BookingService bookingService;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final com.smartpark.service.AccountVerificationService verificationService;
+    private final AccountVerificationService verificationService;
     private final MonthlyPassService monthlyPassService;
+    private final QRCodeService qrCodeService;
+
+    @Value("${app.bank.account}") private String bankAccount;
+    @Value("${app.bank.owner}")   private String bankOwner;
+    @Value("${app.bank.name}")    private String bankName;
 
     public ApiController(ParkingService parkingService,
                          StaffAccountRepository staffRepo,
                          BookingRepository bookingRepo,
                          BookingService bookingService,
                          BCryptPasswordEncoder passwordEncoder,
-                         com.smartpark.service.AccountVerificationService verificationService,
-                         MonthlyPassService monthlyPassService) {
+                         AccountVerificationService verificationService,
+                         MonthlyPassService monthlyPassService,
+                         QRCodeService qrCodeService) {
         this.parkingService  = parkingService;
         this.staffRepo       = staffRepo;
         this.bookingRepo     = bookingRepo;
@@ -53,6 +61,7 @@ public class ApiController {
         this.passwordEncoder = passwordEncoder;
         this.verificationService = verificationService;
         this.monthlyPassService = monthlyPassService;
+        this.qrCodeService = qrCodeService;
     }
 
     // ── AUTH ──────────────────────────────────────────────────────────────────
@@ -138,7 +147,7 @@ public class ApiController {
     @PostMapping("/accounts")
     public ResponseEntity<ApiResponse<StaffAccountResponse>> createAccount(
             @Valid @RequestBody CreateAccountRequest req,
-            jakarta.servlet.http.HttpServletRequest httpRequest) {
+            HttpServletRequest httpRequest) {
         if (staffRepo.existsByUsernameIgnoreCase(req.username())) {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("Tên đăng nhập đã tồn tại"));
@@ -287,5 +296,97 @@ public class ApiController {
         bookingRepo.deleteAll();
         parkingService.resetAllSlots();
         return ApiResponse.success("Đã reset toàn bộ hệ thống", null);
+    }
+
+    // ── CUSTOMER BOOKINGS (Moved from BookingController) ──────────────────────
+
+    @GetMapping("/status/{id}")
+    public ApiResponse<String> getBookingStatus(@PathVariable Long id) {
+        return ApiResponse.success(bookingService.findById(id)
+                .map(Booking::getStatus)
+                .orElse("NOT_FOUND"));
+    }
+
+    @PostMapping("/bookings/pre-booking")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> createPreBooking(
+            @Valid @RequestBody PreBookingRequest request,
+            HttpSession session) {
+        User user = (User) session.getAttribute("currentUser");
+        if (user == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("Vui lòng đăng nhập để đặt trước"));
+        }
+
+        if (request.bookingDate().isBefore(LocalDate.now())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Ngày đặt không được trong quá khứ"));
+        }
+
+        if (request.endTime().isBefore(request.startTime()) ||
+            request.endTime().equals(request.startTime())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Giờ kết thúc phải sau giờ bắt đầu"));
+        }
+
+        Booking booking = bookingService.createPreBooking(user, request);
+
+        String qrUrl = String.format(
+            "https://img.vietqr.io/image/%s-%s-compact2.png?amount=%d&addInfo=%s&accountName=%s",
+            bankName, bankAccount,
+            booking.getAmountDue(),
+            booking.getPaymentCode(),
+            bankOwner.replace(" ", "%20")
+        );
+
+        Map<String, Object> data = Map.of(
+            "bookingId", booking.getId(),
+            "paymentCode", booking.getPaymentCode(),
+            "amountDue", booking.getAmountDue(),
+            "status", booking.getStatus(),
+            "qrPaymentUrl", qrUrl,
+            "bookingDate", booking.getBookingDate().toString(),
+            "startTime", booking.getStartTime().toString(),
+            "endTime", booking.getEndTime().toString(),
+            "slotId", booking.getSlotId() != null ? booking.getSlotId() : ""
+        );
+
+        return ResponseEntity.ok(ApiResponse.success("Đặt chỗ thành công", data));
+    }
+
+    @GetMapping("/bookings/user/{userId}")
+    public ResponseEntity<ApiResponse<List<Booking>>> getUserBookings(
+            @PathVariable Long userId,
+            HttpSession session) {
+        User user = (User) session.getAttribute("currentUser");
+        if (user == null || !user.getId().equals(userId)) {
+            return ResponseEntity.status(401).body(ApiResponse.error("Không có quyền truy cập"));
+        }
+        return ResponseEntity.ok(ApiResponse.success(bookingService.getByUser(userId)));
+    }
+
+    @PostMapping("/bookings/{bookingId}/cancel")
+    public ResponseEntity<ApiResponse<Void>> cancelBooking(
+            @PathVariable Long bookingId,
+            HttpSession session) {
+        User user = (User) session.getAttribute("currentUser");
+        if (user == null) {
+            return ResponseEntity.status(401).body(ApiResponse.error("Vui lòng đăng nhập"));
+        }
+
+        Booking booking = bookingService.findById(bookingId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy booking"));
+
+        if (booking.getUser() == null || !booking.getUser().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).body(ApiResponse.error("Bạn chỉ có thể huỷ booking của mình"));
+        }
+
+        if (!"PENDING".equals(booking.getStatus())) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Chỉ có thể huỷ booking đang chờ thanh toán"));
+        }
+
+        bookingService.cancel(bookingId);
+
+        if (booking.getSlotId() != null) {
+            parkingService.checkout(booking.getSlotId());
+        }
+
+        return ResponseEntity.ok(ApiResponse.success("Đã huỷ booking thành công", null));
     }
 }

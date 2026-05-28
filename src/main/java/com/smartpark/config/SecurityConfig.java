@@ -12,7 +12,18 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/staff/**").hasAnyRole("STAFF", "ADMIN")
+                .requestMatchers("/api/reset/**").hasRole("ADMIN")
+                .requestMatchers("/api/accounts/**").hasRole("ADMIN")
+                .anyRequest().permitAll()
+            )
+            .formLogin(form -> form
+                .loginPage("/login")
+                .permitAll()
+            )
+            .logout(logout -> logout.permitAll());
         return http.build();
     }
 }

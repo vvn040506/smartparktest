@@ -49,4 +49,9 @@ public interface BookingService {
      * Tìm booking theo mã thanh toán
      */
     Optional<Booking> findByPaymentCode(String paymentCode);
+
+    /**
+     * Huỷ booking
+     */
+    void cancel(Long bookingId);
 }

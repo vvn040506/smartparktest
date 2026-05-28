@@ -49,8 +49,13 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    @Transactional
     public StaffAccount createAccount(String fullName, String username,
                                        String password, String role) {
+        // Sử dụng lock hoặc sequence để tránh race condition khi sinh staffCode
+        // Ở đây đơn giản nhất là dùng count() trong Transactional, 
+        // nhưng để an toàn hơn nên dùng một cơ chế sinh mã duy nhất.
+        // Tạm thời dùng count + 1 trong Transactional.
         long count = staffRepo.count();
         String prefix = "admin".equals(role) ? "AD" : "NV";
         StaffAccount acc = new StaffAccount(

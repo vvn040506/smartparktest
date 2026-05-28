@@ -18,11 +18,23 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 public class AuthController {
 
-    @Autowired private UserService userService;
-    @Autowired private AccountService accountService;
-    @Autowired private StaffAccountRepository staffRepo;
-    @Autowired private BCryptPasswordEncoder passwordEncoder;
-    @Autowired private AccountVerificationService verificationService;
+    private final UserService userService;
+    private final AccountService accountService;
+    private final StaffAccountRepository staffRepo;
+    private final BCryptPasswordEncoder passwordEncoder;
+    private final AccountVerificationService verificationService;
+
+    public AuthController(UserService userService,
+                          AccountService accountService,
+                          StaffAccountRepository staffRepo,
+                          BCryptPasswordEncoder passwordEncoder,
+                          AccountVerificationService verificationService) {
+        this.userService = userService;
+        this.accountService = accountService;
+        this.staffRepo = staffRepo;
+        this.passwordEncoder = passwordEncoder;
+        this.verificationService = verificationService;
+    }
 
     // ── LOGIN ──────────────────────────────────────────
     @GetMapping("/login")
