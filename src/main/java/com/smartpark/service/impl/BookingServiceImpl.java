@@ -11,8 +11,10 @@ import com.smartpark.service.MonthlyPassService;
 import com.smartpark.service.PricingService;
 import com.smartpark.service.pricing.PricingFactory;
 import com.smartpark.service.pricing.PricingStrategy;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
@@ -24,6 +26,7 @@ import java.util.Optional;
  * Sử dụng PricingFactory (Factory Pattern) + PricingStrategy (Strategy Pattern)
  * để tính phí thay vì if/else trực tiếp.
  */
+@Slf4j
 @Primary
 @Service
 public class BookingServiceImpl implements BookingService {
@@ -49,15 +52,16 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public Booking createBooking(String customerName, String plate,
                                  String vehicleType,
                                  LocalDateTime checkIn, LocalDateTime checkOut) {
-        // Validate checkIn date is not in the past
-        if (checkIn.isBefore(LocalDateTime.now())) {
+        log.info("Creating walk-in booking for plate: {}, type: {}", plate, vehicleType);
+        
+        if (checkIn.isBefore(LocalDateTime.now().minusMinutes(5))) {
             throw new IllegalArgumentException("Ngày check-in không được trong quá khứ");
         }
         
-        // Sử dụng Strategy Pattern: lấy strategy tương ứng loại xe
         PricingStrategy pricing = pricingFactory.getStrategy(vehicleType);
 
         Booking b = new Booking();
@@ -67,10 +71,13 @@ public class BookingServiceImpl implements BookingService {
         b.setVehicleType(vehicleType);
         b.setCheckIn(checkIn);
         b.setCheckOut(checkOut);
-        b.setAmountDue(pricing.calculate(checkIn, checkOut)); // Polymorphism!
+        b.setAmountDue(pricing.calculate(checkIn, checkOut));
         b.setPaymentCode(generatePaymentCode());
         b.setStatus("CONFIRMED");
-        return repo.save(b);
+        
+        Booking saved = repo.save(b);
+        log.info("Booking created with ID: {} and PaymentCode: {}", saved.getId(), saved.getPaymentCode());
+        return saved;
     }
 
     @Override
@@ -118,34 +125,41 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public boolean processPayment(String content, long amount, String bankRef) {
         if (content == null) return false;
         String upper = content.toUpperCase();
+        log.info("Processing payment for content: {}, amount: {}", content, amount);
 
-        // Extract payment code from content (format: "THANH TOAN SP123456")
-        // Find any occurrence of "SP" followed by 6 alphanumeric characters
         String paymentCode = null;
         int spIndex = upper.indexOf("SP");
         if (spIndex != -1 && spIndex + 8 <= upper.length()) {
             paymentCode = upper.substring(spIndex, spIndex + 8);
         }
         
-        if (paymentCode == null) return false;
+        if (paymentCode == null) {
+            log.warn("No payment code found in content: {}", content);
+            return false;
+        }
 
-        // Use optimized query instead of findAll()
         Optional<Booking> found = repo.findByPaymentCodeAndStatusNot(paymentCode, "PAID");
 
-        if (found.isEmpty()) return false;
+        if (found.isEmpty()) {
+            log.warn("No pending booking found for payment code: {}", paymentCode);
+            return false;
+        }
 
         Booking b = found.get();
-        if (amount < b.getAmountDue()) return false;
+        if (amount < b.getAmountDue()) {
+            log.warn("Insufficient amount for booking {}: expected {}, got {}", paymentCode, b.getAmountDue(), amount);
+            return false;
+        }
 
         b.setStatus("PAID");
         b.setPaidAt(LocalDateTime.now());
         b.setBankRef(bankRef);
         repo.save(b);
 
-        // Gửi email thông báo thanh toán thành công
         if (b.getEmail() != null && !b.getEmail().isBlank()) {
             try {
                 emailService.sendBookingPaidEmail(
@@ -157,12 +171,11 @@ public class BookingServiceImpl implements BookingService {
                     b.getAmountDue()
                 );
             } catch (Exception e) {
-                System.err.println("Lỗi gửi email thanh toán: " + e.getMessage());
+                log.error("Failed to send payment confirmation email to {}: {}", b.getEmail(), e.getMessage());
             }
         }
 
-        System.out.printf("[PAID] ✅ %s | %s | %,d đ%n",
-                b.getPaymentCode(), b.getLicensePlate(), amount);
+        log.info("[PAID] ✅ {} | {} | {} VND", b.getPaymentCode(), b.getLicensePlate(), amount);
         return true;
     }
 

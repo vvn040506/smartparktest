@@ -53,55 +53,5 @@ public class ParkingSlotController {
         return "parking-lot-view";
     }
 
-    /**
-     * API: Lấy danh sách slot trống (public access)
-     * GET /api/slots/available
-     */
-    @GetMapping("/api/slots/available")
-    @ResponseBody
-    public ResponseEntity<?> getAvailableSlots(
-            @RequestParam(required = false) String vehicleType,
-            @RequestParam(required = false) String date) {
-        try {
-            Map<String, Object> response = new HashMap<>();
-            
-            if (vehicleType != null && !vehicleType.isEmpty()) {
-                // Lọc theo loại xe
-                List<ParkingSlot> slots = parkingSlotService.getAvailableSlots(vehicleType);
-                response.put("success", true);
-                response.put("data", Map.of(
-                    "vehicleType", vehicleType,
-                    "available", slots.size(),
-                    "slots", slots.stream().map(ParkingSlot::getId).toList()
-                ));
-            } else {
-                // Trả về tất cả
-                List<ParkingSlot> motoSlots = parkingSlotService.getAvailableSlots("xe_may");
-                List<ParkingSlot> carSlots = parkingSlotService.getAvailableSlots("o_to");
-                
-                response.put("success", true);
-                response.put("data", Map.of(
-                    "motorbike", Map.of(
-                        "total", parkingSlotService.getSlotsByZone("motorbike").size(),
-                        "available", motoSlots.size(),
-                        "slots", motoSlots.stream().map(ParkingSlot::getId).toList()
-                    ),
-                    "car", Map.of(
-                        "total", parkingSlotService.getSlotsByZone("car").size(),
-                        "available", carSlots.size(),
-                        "slots", carSlots.stream().map(ParkingSlot::getId).toList()
-                    )
-                ));
-            }
-            
-            return ResponseEntity.ok(response);
-            
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of(
-                "success", false,
-                "message", "Lỗi: " + e.getMessage()
-            ));
-        }
-    }
 
 }

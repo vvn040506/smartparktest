@@ -14,6 +14,8 @@ public interface AccountService {
     List<StaffAccount> getAllAccounts();
 
     StaffAccount createAccount(String fullName, String username, String password, String role);
+    
+    StaffAccount createAccount(String fullName, String username, String email, String password, String role);
 
     StaffAccount updateAccount(Long id, String fullName, String role, boolean active, String password);
 

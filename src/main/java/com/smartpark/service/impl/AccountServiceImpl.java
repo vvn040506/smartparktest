@@ -7,6 +7,7 @@ import com.smartpark.repository.PasswordResetTokenRepository;
 import com.smartpark.repository.StaffAccountRepository;
 import com.smartpark.service.AccountService;
 import com.smartpark.service.EmailService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class AccountServiceImpl implements AccountService {
 
@@ -50,22 +52,37 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
-    public StaffAccount createAccount(String fullName, String username,
+    public synchronized StaffAccount createAccount(String fullName, String username,
                                        String password, String role) {
-        // Sử dụng lock hoặc sequence để tránh race condition khi sinh staffCode
-        // Ở đây đơn giản nhất là dùng count() trong Transactional, 
-        // nhưng để an toàn hơn nên dùng một cơ chế sinh mã duy nhất.
-        // Tạm thời dùng count + 1 trong Transactional.
-        long count = staffRepo.count();
+        return createAccount(fullName, username, null, password, role);
+    }
+
+    @Override
+    @Transactional
+    public synchronized StaffAccount createAccount(String fullName, String username,
+                                       String email, String password, String role) {
+        log.info("Creating new account for user: {}, role: {}", username, role);
+        
         String prefix = "admin".equals(role) ? "AD" : "NV";
+        
+        // Lấy mã lớn nhất hiện tại của prefix này để tránh trùng lặp
+        long count = staffRepo.findAllByOrderByStaffCodeAsc().stream()
+                .filter(a -> a.getStaffCode().startsWith(prefix))
+                .count();
+        
+        String staffCode = prefix + String.format("%03d", count + 1);
+        
         StaffAccount acc = new StaffAccount(
-                prefix + String.format("%03d", count + 1),
-                fullName, username, null, passwordEncoder.encode(password), role
+                staffCode,
+                fullName, username, email, passwordEncoder.encode(password), role
         );
-        // Không auto-verify - yêu cầu xác nhận email
+        
         acc.setVerified(false);
         acc.setActive(false);
-        return staffRepo.save(acc);
+        
+        StaffAccount saved = staffRepo.save(acc);
+        log.info("Account created successfully with staffCode: {}", staffCode);
+        return saved;
     }
 
     @Override

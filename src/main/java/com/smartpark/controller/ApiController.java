@@ -35,6 +35,7 @@ public class ApiController {
 
     private final ParkingService parkingService;
     private final StaffAccountRepository staffRepo;
+    private final AccountService accountService;
     private final BookingRepository bookingRepo;
     private final BookingService bookingService;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -48,6 +49,7 @@ public class ApiController {
 
     public ApiController(ParkingService parkingService,
                          StaffAccountRepository staffRepo,
+                         AccountService accountService,
                          BookingRepository bookingRepo,
                          BookingService bookingService,
                          BCryptPasswordEncoder passwordEncoder,
@@ -56,6 +58,7 @@ public class ApiController {
                          QRCodeService qrCodeService) {
         this.parkingService  = parkingService;
         this.staffRepo       = staffRepo;
+        this.accountService  = accountService;
         this.bookingRepo     = bookingRepo;
         this.bookingService  = bookingService;
         this.passwordEncoder = passwordEncoder;
@@ -152,16 +155,11 @@ public class ApiController {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("Tên đăng nhập đã tồn tại"));
         }
-        String prefix = "admin".equals(req.role()) ? "AD" : "NV";
-        long count = staffRepo.findAllByOrderByStaffCodeAsc().stream()
-                .filter(a -> a.getStaffCode().startsWith(prefix)).count();
-        String code = prefix + String.format("%03d", count + 1);
-
-        StaffAccount account = new StaffAccount(code, req.fullName(), req.username(), req.email(), passwordEncoder.encode(req.password()), req.role());
-        // Yêu cầu xác nhận email trước khi kích hoạt
-        account.setVerified(false);
-        account.setActive(false);
-        StaffAccount saved = staffRepo.save(account);
+        
+        // Sử dụng accountService để đảm bảo thread-safe và logic tập trung
+        StaffAccount saved = accountService.createAccount(
+                req.fullName(), req.username(), req.email(), req.password(), req.role()
+        );
         
         // ✅ GỬI MAIL XÁC NHẬN (ASYNC)
         if (req.email() != null && !req.email().isBlank()) {
@@ -296,6 +294,37 @@ public class ApiController {
         bookingRepo.deleteAll();
         parkingService.resetAllSlots();
         return ApiResponse.success("Đã reset toàn bộ hệ thống", null);
+    }
+
+    // ── SLOTS AVAILABLE (Moved from ParkingSlotController) ────────────────────
+
+    @GetMapping("/slots/available")
+    public ApiResponse<Map<String, Object>> getAvailableSlots(
+            @RequestParam(required = false) String vehicleType) {
+        if (vehicleType != null && !vehicleType.isEmpty()) {
+            List<ParkingSlot> slots = parkingService.getAvailableSlots(vehicleType);
+            return ApiResponse.success(Map.of(
+                "vehicleType", vehicleType,
+                "available", slots.size(),
+                "slots", slots.stream().map(ParkingSlot::getId).toList()
+            ));
+        } else {
+            List<ParkingSlot> motoSlots = parkingService.getAvailableSlots("xe_may");
+            List<ParkingSlot> carSlots = parkingService.getAvailableSlots("o_to");
+            
+            return ApiResponse.success(Map.of(
+                "motorbike", Map.of(
+                    "total", parkingService.getSlotsByZone("motorbike").size(),
+                    "available", motoSlots.size(),
+                    "slots", motoSlots.stream().map(ParkingSlot::getId).toList()
+                ),
+                "car", Map.of(
+                    "total", parkingService.getSlotsByZone("car").size(),
+                    "available", carSlots.size(),
+                    "slots", carSlots.stream().map(ParkingSlot::getId).toList()
+                )
+            ));
+        }
     }
 
     // ── CUSTOMER BOOKINGS (Moved from BookingController) ──────────────────────
