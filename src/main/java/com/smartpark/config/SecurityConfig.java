@@ -13,6 +13,7 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/staff/forgot-password", "/staff/reset-password").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/staff/**").hasAnyRole("STAFF", "ADMIN")
                 .requestMatchers("/api/reset/**").hasRole("ADMIN")

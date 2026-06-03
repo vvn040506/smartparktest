@@ -9,7 +9,13 @@ import com.smartpark.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import java.util.Collections;
+import java.util.List;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -52,6 +58,13 @@ public class AuthController {
         
         if (staff != null) {
             session.setAttribute("user", staff);
+            
+            // Manually set authentication in SecurityContext
+            String role = "ROLE_" + staff.getRole().toUpperCase();
+            List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
+            Authentication auth = new UsernamePasswordAuthenticationToken(staff.getUsername(), null, authorities);
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            
             return "admin".equals(staff.getRole()) ? "redirect:/admin" : "redirect:/staff";
         }
         
@@ -59,6 +72,12 @@ public class AuthController {
         User user = userService.login(username, password);
         if (user != null) {
             session.setAttribute("currentUser", user);
+            
+            // Manually set authentication in SecurityContext for User
+            List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+            Authentication auth = new UsernamePasswordAuthenticationToken(user.getUsername(), null, authorities);
+            SecurityContextHolder.getContext().setAuthentication(auth);
+            
             return "redirect:/booking";
         }
         
