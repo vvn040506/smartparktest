@@ -12,8 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import java.util.Collections;
 import java.util.List;
 import org.springframework.stereotype.Controller;
@@ -63,7 +65,11 @@ public class AuthController {
             String role = "ROLE_" + staff.getRole().toUpperCase();
             List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
             Authentication auth = new UsernamePasswordAuthenticationToken(staff.getUsername(), null, authorities);
-            SecurityContextHolder.getContext().setAuthentication(auth);
+            
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(auth);
+            SecurityContextHolder.setContext(context);
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
             
             return "admin".equals(staff.getRole()) ? "redirect:/admin" : "redirect:/staff";
         }
@@ -76,7 +82,11 @@ public class AuthController {
             // Manually set authentication in SecurityContext for User
             List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
             Authentication auth = new UsernamePasswordAuthenticationToken(user.getUsername(), null, authorities);
-            SecurityContextHolder.getContext().setAuthentication(auth);
+            
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(auth);
+            SecurityContextHolder.setContext(context);
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
             
             return "redirect:/booking";
         }
