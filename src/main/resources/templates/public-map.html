@@ -1,207 +1,283 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SmartPark – Xem Bãi Đỗ Xe</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#f0f4f8;--surface:#ffffff;--surface2:#e8f0fe;--border:#c5d5ea;--accent:#1a73e8;--green:#00897b;--red:#e53935;--yellow:#f9a825;--text:#1a2332;--muted:#5f7a99;--font:'Syne',sans-serif;--mono:'Space Mono',monospace}
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh}
-header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 32px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800}
-.logo-icon{width:36px;height:36px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
-.logo span{color:var(--accent)}
-.live-badge{display:flex;align-items:center;gap:6px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);padding:4px 12px;border-radius:20px;font-size:12px;color:var(--green);font-family:var(--mono)}
-.live-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
-.btn-login{background:var(--accent);color:var(--bg);border:none;padding:8px 20px;border-radius:8px;font-family:var(--font);font-weight:700;font-size:13px;cursor:pointer;text-decoration:none;display:inline-block}
-.stats-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:20px 32px;display:flex;align-items:center;gap:32px;flex-wrap:wrap}
-.stat-item{display:flex;flex-direction:column;gap:2px}
-.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-family:var(--mono)}
-.stat-value{font-size:28px;font-weight:800;font-family:var(--mono);line-height:1}
-.stat-value.green{color:var(--green)}.stat-value.red{color:var(--red)}.stat-value.blue{color:var(--accent)}
-.stat-divider{width:1px;height:40px;background:var(--border)}
-.occupancy-bar{flex:1;min-width:200px;max-width:400px}
-.occ-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;font-family:var(--mono)}
-.occ-track{height:8px;background:var(--border);border-radius:4px;overflow:hidden}
-.occ-fill{height:100%;border-radius:4px}
-.main{padding:28px 32px;max-width:1400px;margin:0 auto}
-.zone-tabs{display:flex;gap:8px;margin-bottom:24px}
-.zone-tab{display:flex;align-items:center;gap:8px;padding:8px 20px;border-radius:10px;border:1.5px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);font-weight:600;font-size:14px;cursor:pointer;transition:all .2s;text-decoration:none}
-.zone-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(26,115,232,.08)}
-.zone-tab-count{background:var(--border);color:var(--text);padding:2px 8px;border-radius:20px;font-size:11px;font-family:var(--mono)}
-.zone-tab.active .zone-tab-count{background:var(--accent);color:var(--bg)}
-.map-container{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px}
-.map-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
-.map-title{font-size:18px;font-weight:700}
-.legend{display:flex;gap:16px}
-.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
-.legend-dot{width:12px;height:12px;border-radius:3px}
-.legend-dot.empty{background:var(--green)}.legend-dot.filled{background:var(--red)}
-.parking-grid-wrap{overflow-x:auto}
-.col-labels{display:flex;gap:6px;margin-bottom:6px;padding-left:36px}
-.col-label{width:52px;text-align:center;font-size:11px;color:var(--muted);font-family:var(--mono)}
-.row-label-area{display:flex;gap:12px}
-.row-labels{display:flex;flex-direction:column;gap:6px;padding-top:2px}
-.row-label{width:30px;height:52px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--muted);font-family:var(--mono)}
-.parking-rows{display:flex;flex-direction:column;gap:6px}
-.parking-row{display:flex;gap:6px}
-.slot{width:52px;height:52px;border-radius:8px;border:1.5px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all .2s;font-size:10px;font-family:var(--mono)}
-.slot.empty{background:rgba(0,230,118,.12);border-color:rgba(0,230,118,.35);color:var(--green)}
-.slot.filled{background:rgba(255,61,90,.12);border-color:rgba(255,61,90,.35);color:var(--red)}
-.slot:hover{transform:scale(1.05);filter:brightness(1.2)}
-.slot-icon{font-size:20px;line-height:1}
-.slot-code{font-size:9px;margin-top:1px;opacity:.7}
-.road-divider{height:28px;background:repeating-linear-gradient(90deg,transparent,transparent 12px,rgba(249,168,37,.3) 12px,rgba(249,168,37,.3) 20px);border-radius:4px;margin:8px 0;display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(249,168,37,.7);letter-spacing:3px;font-family:var(--mono)}
-.notice{text-align:center;padding:48px 24px;color:var(--muted)}
-footer{text-align:center;padding:24px;color:var(--muted);font-size:12px;border-top:1px solid var(--border);font-family:var(--mono);margin-top:40px}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPark – Xem Bãi Đỗ Xe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root{
+    --bg:#f4f6fb;--surface:#ffffff;--surface2:#f1f5f9;
+    --border:#e2e8f0;--primary:#6366f1;--primary-dark:#4338ca;
+    --green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316;
+    --text:#1e293b;--text-strong:#0f172a;--muted:#64748b;--muted2:#94a3b8;
+    --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;--sidebar:272px;
+}
+* { box-sizing: border-box; }
+body { line-height: 1.6; }
+button, .btn, .btn-submit, .btn-login-submit, .btn-confirm, .btn-action,
+.btn-add, .btn-search, .btn-logout, .btn-outline, .nav-item, .zone-pill,
+.btn-primary, .btn-success, .btn-outline-white, .btn-white {
+    line-height: 1.5;
+    overflow: visible;
+}
+.badge, .version-tag, .admin-badge, .user-role, .status-badge,
+.sc-label, .qs-label, .form-label, label {
+    line-height: 1.5;
+    overflow: visible;
+}
+.nav-item, .nav-link { line-height: 1.5; overflow: visible; }
+.stat-card, .qs-card, .card, .modal { overflow: visible; }
+
+h1,h2,h3,h4,h5,h6,.topbar-title,.login-title,.modal-title,.card-title,.brand-name,.logo-text,
+.page-title,.stat-card .sc-value,.section-title {
+    font-feature-settings: "ss01" 0, "ss02" 0, "ss03" 0, "calt" 0;
+    font-variant-ligatures: none;
+    font-variant-numeric: normal;
+}
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; }
+        
+        header { 
+            background: #0f172a; padding: 0 40px; height: 80px; 
+            display: flex; align-items: center; justify-content: space-between; 
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+        .logo { display: flex; align-items: center; gap: 12px; font-size: 24px; font-weight: 800; color: white; text-decoration: none; letter-spacing: normal; }
+        .logo-icon { width: 44px; height: 44px; background: var(--primary); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3); }
+        .logo span { color: var(--primary); }
+        
+        .live-badge { 
+            display: flex; align-items: center; gap: 8px; 
+            background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.2); 
+            padding: 8px 16px; border-radius: 100px; font-size: 12px; color: var(--green); 
+            font-family: var(--mono); font-weight: 700; letter-spacing: 1px;
+        }
+        .live-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.8); } }
+        
+        .btn-nav { padding: 10px 24px; border-radius: 12px; font-weight: 700; font-size: 14px; text-decoration: none; transition: all 0.2s; }
+        .btn-login { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .btn-login:hover { background: white; color: #0f172a; }
+        .btn-booking { background: var(--green); color: white; border: none; box-shadow: 0 8px 15px rgba(16, 185, 129, 0.2); }
+        .btn-booking:hover { transform: translateY(-2px); box-shadow: 0 12px 20px rgba(16, 185, 129, 0.3); }
+
+        .stats-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 32px 40px; display: flex; align-items: center; gap: 48px; flex-wrap: wrap; }
+        .stat-item { display: flex; flex-direction: column; gap: 6px; }
+        .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; font-family: var(--mono); font-weight: 700; }
+        .stat-value { font-size: 40px; font-weight: 800; font-family: var(--mono); line-height: 1; letter-spacing: normal; }
+        .stat-value.green { color: var(--green); }
+        .stat-value.red { color: var(--red); }
+        .stat-value.blue { color: var(--primary); }
+        .stat-divider { width: 1px; height: 50px; background: var(--border); }
+        
+        .occupancy-bar { flex: 1; min-width: 300px; max-width: 500px; }
+        .occ-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 10px; font-family: var(--mono); font-weight: 700; }
+        .occ-track { height: 12px; background: var(--surface2); border-radius: 100px; overflow: hidden; }
+        .occ-fill { height: 100%; border-radius: 100px; transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+        .main { padding: 48px 40px; max-width: 1440px; margin: 0 auto; }
+        .zone-tabs { display: flex; gap: 16px; margin-bottom: 40px; }
+        .zone-tab { 
+            display: flex; align-items: center; gap: 14px; padding: 16px 32px; 
+            border-radius: 20px; border: 1.5px solid var(--border); background: var(--surface); 
+            color: var(--muted); font-weight: 700; font-size: 16px; 
+            cursor: pointer; transition: all 0.3s; text-decoration: none;
+        }
+        .zone-tab:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-3px); }
+        .zone-tab.active { border-color: var(--primary); color: var(--primary); background: rgba(99, 102, 241, 0.05); box-shadow: 0 10px 25px rgba(99, 102, 241, 0.1); }
+        .zone-tab-count { background: var(--surface2); color: var(--text); padding: 4px 12px; border-radius: 100px; font-size: 11px; font-family: var(--mono); font-weight: 700; }
+        .zone-tab.active .zone-tab-count { background: var(--primary); color: white; }
+
+        .map-container { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.03); }
+        .map-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; flex-wrap: wrap; gap: 20px; }
+        .map-title { font-size: 24px; font-weight: 800; letter-spacing: -0.2px; }
+        .legend { display: flex; gap: 24px; }
+        .legend-item { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); font-weight: 600; }
+        .legend-dot { width: 16px; height: 16px; border-radius: 6px; }
+        .legend-dot.empty { background: rgba(16, 185, 129, 0.2); border: 2px solid var(--green); }
+        .legend-dot.filled { background: var(--primary); opacity: 0.6; }
+
+        .parking-grid-wrap { overflow-x: auto; padding-bottom: 20px; }
+        .col-labels { display: flex; gap: 10px; margin-bottom: 12px; padding-left: 48px; }
+        .col-label { width: 60px; text-align: center; font-size: 11px; color: var(--muted); font-family: var(--mono); font-weight: 700; }
+        .row-label-area { display: flex; gap: 20px; }
+        .row-labels { display: flex; flex-direction: column; gap: 10px; padding-top: 4px; }
+        .row-label { width: 32px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: var(--muted); font-family: var(--mono); }
+        
+        .parking-rows { display: flex; flex-direction: column; gap: 10px; }
+        .parking-row { display: flex; gap: 10px; }
+        .slot { 
+            width: 60px; height: 60px; border-radius: 14px; border: 2px solid transparent; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            transition: all 0.2s; font-size: 11px; font-family: var(--mono); font-weight: 700;
+        }
+        .slot.empty { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.15); color: var(--green); }
+        .slot.filled { background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.2); color: var(--primary); }
+        .slot:hover { transform: scale(1.1); z-index: 10; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .slot-icon { font-size: 24px; line-height: 1; margin-bottom: 2px; }
+        .slot-code { font-size: 10px; opacity: 0.7; }
+
+        .road-divider { 
+            height: 40px; background: repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(245, 158, 11, 0.15) 20px, rgba(245, 158, 11, 0.15) 35px); 
+            border-radius: 12px; margin: 16px 0; display: flex; align-items: center; justify-content: center; 
+            font-size: 12px; color: var(--yellow); font-weight: 800; letter-spacing: 6px; font-family: var(--mono);
+            text-transform: uppercase;
+        }
+        
+        .notice { text-align: center; padding: 80px 24px; color: var(--muted); }
+        .notice-icon { font-size: 48px; margin-bottom: 20px; display: block; }
+        .notice p { font-size: 16px; font-weight: 500; line-height: 1.6; max-width: 500px; margin: 0 auto; }
+        
+        footer { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); font-family: var(--mono); margin-top: 80px; font-weight: 700; }
+    </style>
 </head>
 <body>
+
 <header>
-  <a href="/login" class="logo" style="text-decoration:none;color:inherit;cursor:pointer"><div class="logo-icon">🅿</div>Smart<span>Park</span></a>
-  <div style="display:flex;align-items:center;gap:16px">
-    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
-    <a href="/booking" style="background:var(--green);color:var(--bg);border:none;padding:8px 20px;border-radius:8px;font-family:var(--font);font-weight:700;font-size:13px;cursor:pointer;text-decoration:none;display:inline-block">🎫 Đặt vé</a>
-    <a href="/login" class="btn-login">Đăng nhập</a>
-  </div>
+    <a href="/" class="logo">
+        <div class="logo-icon">🅿️</div>
+        Smart<span>Park</span>
+    </a>
+    <div style="display:flex;align-items:center;gap:24px">
+        <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+        <a href="/booking" class="btn-nav btn-booking">🎫 Đặt vé ngay</a>
+        <a href="/login" class="btn-nav btn-login">Đăng nhập</a>
+    </div>
 </header>
 
 <div class="stats-bar">
-  <div class="stat-item">
-    <div class="stat-label">Tổng ô</div>
-    <div class="stat-value blue" th:text="${total}">0</div>
-  </div>
-  <div class="stat-divider"></div>
-  <div class="stat-item">
-    <div class="stat-label">Ô trống</div>
-    <div class="stat-value green" th:text="${empty}">0</div>
-  </div>
-  <div class="stat-divider"></div>
-  <div class="stat-item">
-    <div class="stat-label">Đang đỗ</div>
-    <div class="stat-value red" th:text="${filled}">0</div>
-  </div>
-  <div class="stat-divider"></div>
-  <div class="occupancy-bar">
-    <div class="occ-label">
-      <span>Mức sử dụng</span>
-      <span th:text="${pct} + '%'">0%</span>
+    <div class="stat-item">
+        <div class="stat-label">Tổng sức chứa</div>
+        <div class="stat-value blue" th:text="${total}">0</div>
     </div>
-    <div class="occ-track">
-      <div class="occ-fill" th:style="'width:' + ${pct} + '%;background:' + (${pct} < 50 ? 'linear-gradient(90deg,#00e676,#ffd60a)' : (${pct} < 80 ? 'linear-gradient(90deg,#ffd60a,#ff6b35)' : 'linear-gradient(90deg,#ff6b35,#ff3d5a)'))"></div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+        <div class="stat-label">Ô còn trống</div>
+        <div class="stat-value green" th:text="${empty}">0</div>
     </div>
-  </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+        <div class="stat-label">Đang sử dụng</div>
+        <div class="stat-value red" th:text="${filled}">0</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="occupancy-bar">
+        <div class="occ-label">
+            <span>Tỷ lệ lấp đầy</span>
+            <span th:text="${pct} + '%'">0%</span>
+        </div>
+        <div class="occ-track">
+            <div class="occ-fill" th:style="'width:' + ${pct} + '%;background:' + (${pct} < 50 ? 'var(--green)' : (${pct} < 85 ? 'var(--yellow)' : 'var(--red)'))"></div>
+        </div>
+    </div>
 </div>
 
 <div class="main">
-  <div class="zone-tabs">
-    <a href="#moto" class="zone-tab active" onclick="switchZone('moto',this);return false">
-      🏍️ Khu Xe Máy
-      <span class="zone-tab-count" th:text="${motoEmpty} + ' trống'">0 trống</span>
-    </a>
-    <a href="#car" class="zone-tab" onclick="switchZone('car',this);return false">
-      🚗 Khu Ô Tô
-      <span class="zone-tab-count" th:text="${carEmpty} + ' trống'">0 trống</span>
-    </a>
-  </div>
-
-  <div class="map-container">
-    <div class="map-header">
-      <div class="map-title" id="zone-title">🏍️ Khu Xe Máy – Sơ Đồ Bãi</div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot empty"></div>Ô trống</div>
-        <div class="legend-item"><div class="legend-dot filled"></div>Đang có xe</div>
-      </div>
+    <div class="zone-tabs">
+        <a href="#moto" class="zone-tab active" onclick="switchZone('moto',this);return false">
+            🏍️ Khu Xe Máy
+            <span class="zone-tab-count" th:text="${motoEmpty} + ' trống'">0 trống</span>
+        </a>
+        <a href="#car" class="zone-tab" onclick="switchZone('car',this);return false">
+            🚗 Khu Ô Tô
+            <span class="zone-tab-count" th:text="${carEmpty} + ' trống'">0 trống</span>
+        </a>
     </div>
-    <div class="parking-grid-wrap">
 
-      <!-- KHU XE MÁY -->
-      <div id="zone-moto">
-        <div class="col-labels">
-          <div th:each="s : ${motoSlots}" th:if="${s.id.matches('M-A\\d+')}"
-               th:text="${s.id.substring(3)}" class="col-label"></div>
-        </div>
-        <div class="row-label-area">
-          <div class="row-labels">
-            <div class="row-label">A</div>
-            <div class="row-label">B</div>
-            <div class="row-label">C</div>
-            <div class="row-label">D</div>
-            <div class="row-label">E</div>
-          </div>
-          <div>
-            <div th:each="row : ${motoRows}">
-              <div th:if="${row == 'C'}" class="road-divider">· · · ĐƯỜNG NỘI BỘ · · ·</div>
-              <div class="parking-row">
-                <div th:each="slot : ${motoSlots}"
-                     th:if="${slot.id.startsWith('M-' + row)}"
-                     th:class="${'slot ' + (slot.occupied or slot.reserved ? 'filled' : 'empty')}"
-                     th:title="${slot.id + (slot.occupied ? ' · ' + slot.licensePlate : (slot.reserved ? ' · Đã đặt trước' : ' · Trống'))}">
-                  <div class="slot-icon" th:text="${slot.occupied ? '🏍️' : (slot.reserved ? '🔒' : '')}"></div>
-                  <div class="slot-code" th:text="${slot.id}"></div>
-                </div>
-              </div>
+    <div class="map-container">
+        <div class="map-header">
+            <div class="map-title" id="zone-title">🏍️ Khu Xe Máy – Sơ Đồ Bãi</div>
+            <div class="legend">
+                <div class="legend-item"><div class="legend-dot empty"></div>Ô trống</div>
+                <div class="legend-item"><div class="legend-dot filled"></div>Đang có xe</div>
             </div>
-          </div>
         </div>
-      </div>
-
-      <!-- KHU Ô TÔ -->
-      <div id="zone-car" style="display:none">
-        <div class="row-label-area">
-          <div class="row-labels">
-            <div class="row-label">A</div>
-            <div class="row-label">B</div>
-            <div class="row-label">C</div>
-          </div>
-          <div>
-            <div th:each="row : ${carRows}">
-              <div class="parking-row">
-                <div th:each="slot : ${carSlots}"
-                     th:if="${slot.id.startsWith('C-' + row)}"
-                     th:class="${'slot ' + (slot.occupied or slot.reserved ? 'filled' : 'empty')}"
-                     th:title="${slot.id + (slot.occupied ? ' · ' + slot.licensePlate : (slot.reserved ? ' · Đã đặt trước' : ' · Trống'))}">
-                  <div class="slot-icon" th:text="${slot.occupied ? '🚗' : (slot.reserved ? '🔒' : '')}"></div>
-                  <div class="slot-code" th:text="${slot.id}"></div>
+        
+        <div class="parking-grid-wrap">
+            <!-- KHU XE MÁY -->
+            <div id="zone-moto">
+                <div class="col-labels">
+                    <div th:each="s : ${motoSlots}" th:if="${s.id.matches('M-A\\d+')}"
+                         th:text="${s.id.substring(3)}" class="col-label"></div>
                 </div>
-              </div>
+                <div class="row-label-area">
+                    <div class="row-labels">
+                        <div class="row-label">A</div>
+                        <div class="row-label">B</div>
+                        <div class="row-label">C</div>
+                        <div class="row-label">D</div>
+                        <div class="row-label">E</div>
+                    </div>
+                    <div>
+                        <div th:each="row : ${motoRows}">
+                            <div th:if="${row == 'C'}" class="road-divider">Lối đi nội bộ</div>
+                            <div class="parking-row">
+                                <div th:each="slot : ${motoSlots}"
+                                     th:if="${slot.id.startsWith('M-' + row)}"
+                                     th:class="${'slot ' + (slot.occupied or slot.reserved ? 'filled' : 'empty')}"
+                                     th:title="${slot.id + (slot.occupied ? ' · ' + slot.licensePlate : (slot.reserved ? ' · Đã đặt trước' : ' · Trống'))}">
+                                    <div class="slot-icon" th:text="${slot.occupied ? '🏍️' : (slot.reserved ? '🔒' : '')}"></div>
+                                    <div class="slot-code" th:text="${slot.id}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
 
+            <!-- KHU Ô TÔ -->
+            <div id="zone-car" style="display:none">
+                <div class="row-label-area">
+                    <div class="row-labels">
+                        <div class="row-label">A</div>
+                        <div class="row-label">B</div>
+                        <div class="row-label">C</div>
+                    </div>
+                    <div>
+                        <div th:each="row : ${carRows}">
+                            <div class="parking-row">
+                                <div th:each="slot : ${carSlots}"
+                                     th:if="${slot.id.startsWith('C-' + row)}"
+                                     th:class="${'slot ' + (slot.occupied or slot.reserved ? 'filled' : 'empty')}"
+                                     th:title="${slot.id + (slot.occupied ? ' · ' + slot.licensePlate : (slot.reserved ? ' · Đã đặt trước' : ' · Trống'))}">
+                                    <div class="slot-icon" th:text="${slot.occupied ? '🚗' : (slot.reserved ? '🔒' : '')}"></div>
+                                    <div class="slot-code" th:text="${slot.id}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <div class="notice">
-    <div style="font-size:40px;margin-bottom:12px">ℹ️</div>
-    <p>Sơ đồ hiển thị trạng thái thực tế từ hệ thống.<br>
-    Để gửi xe, vui lòng đến quầy nhân viên.</p>
-  </div>
+    <div class="notice">
+        <span class="notice-icon">💡</span>
+        <p>Sơ đồ hiển thị trạng thái thực tế từ cảm biến. Để đảm bảo có chỗ, quý khách vui lòng sử dụng tính năng đặt vé trực tuyến.</p>
+    </div>
 </div>
 
-<footer>SmartPark v1.0 · Cập nhật lúc <span id="last-update"></span></footer>
+<footer>SmartPark Enterprise · Cập nhật: <span id="last-update"></span></footer>
 
 <script>
-function switchZone(z, btn) {
-  document.querySelectorAll('.zone-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('zone-moto').style.display = z === 'moto' ? '' : 'none';
-  document.getElementById('zone-car').style.display  = z === 'car'  ? '' : 'none';
-  document.getElementById('zone-title').textContent  = z === 'moto'
-    ? '🏍️ Khu Xe Máy – Sơ Đồ Bãi' : '🚗 Khu Ô Tô – Sơ Đồ Bãi';
-}
-function tick() {
-  document.getElementById('last-update').textContent =
-    new Date().toLocaleString('vi',{hour:'2-digit',minute:'2-digit',second:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'});
-}
-tick(); setInterval(tick, 1000);
-// Auto reload mỗi 30s để lấy dữ liệu mới
-setInterval(() => location.reload(), 30000);
+    function switchZone(z, btn) {
+        document.querySelectorAll('.zone-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('zone-moto').style.display = z === 'moto' ? '' : 'none';
+        document.getElementById('zone-car').style.display  = z === 'car'  ? '' : 'none';
+        document.getElementById('zone-title').textContent  = z === 'moto'
+            ? '🏍️ Khu Xe Máy – Sơ Đồ Bãi' : '🚗 Khu Ô Tô – Sơ Đồ Bãi';
+    }
+    function tick() {
+        document.getElementById('last-update').textContent =
+            new Date().toLocaleString('vi',{hour:'2-digit',minute:'2-digit',second:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'});
+    }
+    tick(); setInterval(tick, 1000);
+    setInterval(() => location.reload(), 45000);
 </script>
 </body>
 </html>

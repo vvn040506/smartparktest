@@ -1,309 +1,297 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Walk-in Booking - SmartPark</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <title>Walk-in Booking – SmartPark</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .card {
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        .price-badge {
-            font-size: 1.2rem;
-            font-weight: bold;
-            padding: 10px 20px;
-            border-radius: 10px;
-        }
-        .ticket-display {
-            background: #f8f9fa;
-            border: 2px dashed #667eea;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        .ticket-code {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #667eea;
-            font-family: 'Courier New', monospace;
-        }
+        :root{
+    --bg:#f4f6fb;--surface:#ffffff;--surface2:#f1f5f9;
+    --border:#e2e8f0;--primary:#6366f1;--primary-dark:#4338ca;
+    --green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316;
+    --text:#1e293b;--text-strong:#0f172a;--muted:#64748b;--muted2:#94a3b8;
+    --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;--sidebar:272px;
+}
+* { box-sizing: border-box; }
+body { line-height: 1.6; }
+button, .btn, .btn-submit, .btn-login-submit, .btn-confirm, .btn-action,
+.btn-add, .btn-search, .btn-logout, .btn-outline, .nav-item, .zone-pill,
+.btn-primary, .btn-success, .btn-outline-white, .btn-white {
+    line-height: 1.5;
+    overflow: visible;
+}
+.badge, .version-tag, .admin-badge, .user-role, .status-badge,
+.sc-label, .qs-label, .form-label, label {
+    line-height: 1.5;
+    overflow: visible;
+}
+.nav-item, .nav-link { line-height: 1.5; overflow: visible; }
+.stat-card, .qs-card, .card, .modal { overflow: visible; }
+
+h1,h2,h3,h4,h5,h6,.topbar-title,.login-title,.modal-title,.card-title,.brand-name,.logo-text,
+.page-title,.stat-card .sc-value,.section-title {
+    font-feature-settings: "ss01" 0, "ss02" 0, "ss03" 0, "calt" 0;
+    font-variant-ligatures: none;
+    font-variant-numeric: normal;
+}
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; padding: 24px; }
+        
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+        .logo { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 800; color: var(--text); text-decoration: none; }
+        .logo-icon { width: 36px; height: 36px; background: var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; }
+        .logo span { color: var(--primary); }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.04); }
+        .card-title { font-size: 20px; font-weight: 800; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; font-family: var(--mono); }
+        
+        input, select { width: 100%; padding: 14px 20px; border-radius: 16px; border: 1.5px solid var(--border); font-family: var(--font); font-size: 15px; font-weight: 600; transition: all 0.2s; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+
+        .price-info { background: rgba(99, 102, 241, 0.05); border-radius: 20px; padding: 20px; margin-bottom: 24px; }
+        .price-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; font-weight: 600; }
+        .price-row:last-child { margin-bottom: 0; }
+        .price-value { color: var(--primary); font-weight: 800; font-family: var(--mono); }
+
+        .btn { width: 100%; padding: 16px; border-radius: 16px; border: none; font-weight: 800; cursor: pointer; transition: all 0.3s; font-family: var(--font); font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2); }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
+        
+        .btn-success { background: var(--green); color: white; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2); }
+        .btn-success:hover { transform: translateY(-2px); }
+
+        .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--muted); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        .ticket-display { background: var(--bg); border: 2px dashed var(--primary); border-radius: 24px; padding: 24px; text-align: center; animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .ticket-code { font-family: var(--mono); font-size: 32px; font-weight: 800; color: var(--primary); margin: 16px 0; letter-spacing: 2px; }
+        .ticket-info { font-size: 14px; font-weight: 600; color: var(--muted); margin-bottom: 8px; }
+        .ticket-info span { color: var(--text); font-weight: 700; }
+
+        .info-box { background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 20px; padding: 20px; margin-bottom: 20px; }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; font-weight: 600; }
+        .info-row:last-child { margin-bottom: 0; }
+        .info-val { color: var(--text); font-weight: 700; }
+        .info-val.total { color: var(--red); font-size: 18px; font-family: var(--mono); }
+
+        .back-btn { color: var(--muted); text-decoration: none; font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .back-btn:hover { color: var(--primary); }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-10">
-                <!-- Header -->
-                <div class="text-center text-white mb-4">
-                    <h1><i class="bi bi-car-front-fill"></i> Walk-in Booking</h1>
-                    <p>Đỗ xe trực tiếp - Không cần đặt trước</p>
+
+<div class="container">
+    <div class="header">
+        <a href="/staff/dashboard" class="logo">
+            <div class="logo-icon">🅿️</div>
+            Smart<span>Park</span>
+        </a>
+        <a href="/staff/dashboard" class="back-btn">← Dashboard</a>
+    </div>
+
+    <div class="grid">
+        <!-- Tạo vé mới -->
+        <div class="card">
+            <div class="card-title"><span>➕</span> Tạo vé mới</div>
+            
+            <form id="walkInForm">
+                <div class="form-group">
+                    <label>Biển số xe</label>
+                    <input type="text" id="licensePlate" placeholder="VD: 30A-123.45" required>
                 </div>
 
-                <!-- Main Card -->
-                <div class="card">
-                    <div class="card-body p-4">
-                        <div class="row">
-                            <!-- Form tạo vé -->
-                            <div class="col-md-6">
-                                <h4 class="mb-4"><i class="bi bi-plus-circle"></i> Tạo vé mới</h4>
-                                
-                                <form id="walkInForm">
-                                    <div class="mb-3">
-                                        <label class="form-label">Biển số xe *</label>
-                                        <input type="text" class="form-control" id="licensePlate" 
-                                               placeholder="VD: 30A12345" required>
-                                    </div>
+                <div class="form-group">
+                    <label>Loại xe</label>
+                    <select id="vehicleType" required>
+                        <option value="">-- Chọn loại xe --</option>
+                        <option value="xe_may">Xe máy</option>
+                        <option value="o_to">Ô tô</option>
+                    </select>
+                </div>
 
-                                    <div class="mb-3">
-                                        <label class="form-label">Loại xe *</label>
-                                        <select class="form-select" id="vehicleType" required>
-                                            <option value="">-- Chọn loại xe --</option>
-                                            <option value="xe_may">Xe máy</option>
-                                            <option value="o_to">Ô tô</option>
-                                        </select>
-                                    </div>
+                <div class="form-group">
+                    <label>Tên khách hàng (tùy chọn)</label>
+                    <input type="text" id="customerName" placeholder="Nguyễn Văn A">
+                </div>
 
-                                    <div class="mb-3">
-                                        <label class="form-label">Tên khách hàng (tuỳ chọn)</label>
-                                        <input type="text" class="form-control" id="customerName" 
-                                               placeholder="VD: Nguyễn Văn A">
-                                    </div>
-
-                                    <div class="alert alert-info">
-                                        <strong>Giá ước tính:</strong><br>
-                                        <span class="price-badge bg-primary text-white">
-                                            Xe máy: <span th:text="${#numbers.formatInteger(motoEstimate, 0, 'COMMA')}">10,000</span> đ/giờ
-                                        </span>
-                                        <br><br>
-                                        <span class="price-badge bg-success text-white">
-                                            Ô tô: <span th:text="${#numbers.formatInteger(carEstimate, 0, 'COMMA')}">20,000</span> đ/giờ
-                                        </span>
-                                    </div>
-
-                                    <button type="submit" class="btn btn-primary btn-lg w-100">
-                                        <i class="bi bi-check-circle"></i> Tạo vé
-                                    </button>
-                                </form>
-
-                                <!-- Ticket Display -->
-                                <div id="ticketDisplay" class="ticket-display" style="display: none;">
-                                    <h5 class="text-center mb-3">✅ Vé đã tạo thành công!</h5>
-                                    <div class="text-center">
-                                        <div class="ticket-code" id="ticketCode">WI123</div>
-                                        <p class="mb-2"><strong>Biển số:</strong> <span id="ticketPlate"></span></p>
-                                        <p class="mb-2"><strong>Loại xe:</strong> <span id="ticketType"></span></p>
-                                        <p class="mb-2"><strong>Giờ vào:</strong> <span id="ticketTime"></span></p>
-                                        <p class="mb-0"><strong>Giá ước tính:</strong> <span id="ticketPrice"></span></p>
-                                    </div>
-                                    <button class="btn btn-secondary w-100 mt-3" onclick="resetForm()">
-                                        <i class="bi bi-arrow-clockwise"></i> Tạo vé mới
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Form hoàn thành vé -->
-                            <div class="col-md-6 border-start">
-                                <h4 class="mb-4"><i class="bi bi-check2-square"></i> Hoàn thành vé</h4>
-                                
-                                <form id="completeForm">
-                                    <div class="mb-3">
-                                        <label class="form-label">Mã vé *</label>
-                                        <input type="text" class="form-control" id="completeTicketId" 
-                                               placeholder="VD: WI123 hoặc 123" required>
-                                    </div>
-
-                                    <button type="button" class="btn btn-info w-100 mb-3" onclick="loadBookingInfo()">
-                                        <i class="bi bi-search"></i> Tra cứu vé
-                                    </button>
-                                </form>
-
-                                <!-- Booking Info Display -->
-                                <div id="bookingInfo" style="display: none;">
-                                    <div class="alert alert-success">
-                                        <h6><strong>Thông tin vé:</strong></h6>
-                                        <p class="mb-1"><strong>Biển số:</strong> <span id="infoPlate"></span></p>
-                                        <p class="mb-1"><strong>Loại xe:</strong> <span id="infoType"></span></p>
-                                        <p class="mb-1"><strong>Giờ vào:</strong> <span id="infoCheckIn"></span></p>
-                                        <p class="mb-1"><strong>Thời gian đỗ:</strong> <span id="infoDuration"></span></p>
-                                        <p class="mb-0"><strong>Giá phải trả:</strong> 
-                                            <span class="text-danger fw-bold" id="infoPrice"></span>
-                                        </p>
-                                    </div>
-
-                                    <button class="btn btn-success btn-lg w-100" onclick="completeBooking()">
-                                        <i class="bi bi-cash-coin"></i> Hoàn thành & Thu tiền
-                                    </button>
-                                </div>
-
-                                <!-- Complete Success Display -->
-                                <div id="completeSuccess" class="alert alert-success" style="display: none;">
-                                    <h5 class="text-center">✅ Đã hoàn thành!</h5>
-                                    <p class="text-center mb-0">Vé đã được thanh toán và đóng.</p>
-                                    <button class="btn btn-secondary w-100 mt-3" onclick="resetComplete()">
-                                        <i class="bi bi-arrow-clockwise"></i> Tra cứu vé khác
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                <div class="price-info">
+                    <div class="price-row">
+                        <span>Giá xe máy:</span>
+                        <span class="price-value"><span th:text="${#numbers.formatInteger(motoEstimate, 0, 'COMMA')}">10,000</span> đ/giờ</span>
+                    </div>
+                    <div class="price-row">
+                        <span>Giá ô tô:</span>
+                        <span class="price-value"><span th:text="${#numbers.formatInteger(carEstimate, 0, 'COMMA')}">20,000</span> đ/giờ</span>
                     </div>
                 </div>
 
-                <!-- Back Button -->
-                <div class="text-center mt-3">
-                    <a href="/staff" class="btn btn-light">
-                        <i class="bi bi-arrow-left"></i> Quay lại
-                    </a>
+                <button type="submit" class="btn btn-primary">Tạo vé ngay</button>
+            </form>
+
+            <div id="ticketDisplay" class="ticket-display" style="display: none;">
+                <div style="font-size: 32px; margin-bottom: 8px;">✅</div>
+                <h4 style="font-weight: 800;">Vé đã được tạo</h4>
+                <div class="ticket-code" id="ticketCode">WI123</div>
+                <div class="ticket-info">Biển số: <span id="ticketPlate"></span></div>
+                <div class="ticket-info">Loại xe: <span id="ticketType"></span></div>
+                <div class="ticket-info">Giờ vào: <span id="ticketTime"></span></div>
+                
+                <button class="btn btn-outline" style="margin-top: 24px;" onclick="resetForm()">Tạo vé khác</button>
+            </div>
+        </div>
+
+        <!-- Hoàn thành vé -->
+        <div class="card">
+            <div class="card-title"><span>🏁</span> Hoàn thành vé</div>
+            
+            <form id="completeForm">
+                <div class="form-group">
+                    <label>Mã vé</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="completeTicketId" placeholder="VD: WI123" required>
+                        <button type="button" class="btn btn-primary" style="width: auto; padding: 0 24px;" onclick="loadBookingInfo()">Tra cứu</button>
+                    </div>
                 </div>
+            </form>
+
+            <div id="bookingInfo" style="display: none;">
+                <div class="info-box">
+                    <div class="info-row">
+                        <span>Biển số:</span>
+                        <span class="info-val" id="infoPlate"></span>
+                    </div>
+                    <div class="info-row">
+                        <span>Loại xe:</span>
+                        <span class="info-val" id="infoType"></span>
+                    </div>
+                    <div class="info-row">
+                        <span>Giờ vào:</span>
+                        <span class="info-val" id="infoCheckIn"></span>
+                    </div>
+                    <div class="info-row">
+                        <span>Thời gian đỗ:</span>
+                        <span class="info-val" id="infoDuration"></span>
+                    </div>
+                    <div class="info-row" style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(0,0,0,0.1);">
+                        <span>TỔNG THANH TOÁN:</span>
+                        <span class="info-val total" id="infoPrice"></span>
+                    </div>
+                </div>
+
+                <button class="btn btn-success" onclick="completeBooking()">THU TIỀN & KẾT THÚC</button>
+            </div>
+
+            <div id="completeSuccess" class="ticket-display" style="display: none; border-color: var(--green);">
+                <div style="font-size: 32px; margin-bottom: 8px;">💰</div>
+                <h4 style="font-weight: 800; color: var(--green);">Thanh toán thành công</h4>
+                <p style="font-size: 14px; color: var(--muted); margin-top: 8px;">Vé đã được đóng và lưu vào lịch sử.</p>
+                <button class="btn btn-outline" style="margin-top: 24px;" onclick="resetComplete()">Tra cứu vé khác</button>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        let currentBookingId = null;
+<script>
+    let currentBookingId = null;
 
-        // Tạo vé walk-in
-        document.getElementById('walkInForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const licensePlate = document.getElementById('licensePlate').value.trim();
-            const vehicleType = document.getElementById('vehicleType').value;
-            const customerName = document.getElementById('customerName').value.trim();
-            
-            if (!licensePlate || !vehicleType) {
-                alert('Vui lòng điền đầy đủ thông tin!');
-                return;
+    document.getElementById('walkInForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const licensePlate = document.getElementById('licensePlate').value.trim();
+        const vehicleType = document.getElementById('vehicleType').value;
+        const customerName = document.getElementById('customerName').value.trim();
+        
+        try {
+            const response = await fetch('/staff/api/walk-in', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ licensePlate, vehicleType, customerName })
+            });
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('ticketCode').textContent = result.data.ticketCode;
+                document.getElementById('ticketPlate').textContent = result.data.licensePlate;
+                document.getElementById('ticketType').textContent = result.data.vehicleType === 'xe_may' ? 'Xe máy' : 'Ô tô';
+                document.getElementById('ticketTime').textContent = new Date(result.data.checkInTime).toLocaleString('vi-VN');
+                document.getElementById('walkInForm').style.display = 'none';
+                document.getElementById('ticketDisplay').style.display = 'block';
+            } else {
+                alert('Lỗi: ' + result.message);
             }
-            
-            try {
-                const response = await fetch('/staff/api/walk-in', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ licensePlate, vehicleType, customerName })
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    // Hiển thị vé
-                    document.getElementById('ticketCode').textContent = result.data.ticketCode;
-                    document.getElementById('ticketPlate').textContent = result.data.licensePlate;
-                    document.getElementById('ticketType').textContent = 
-                        result.data.vehicleType === 'xe_may' ? 'Xe máy' : 'Ô tô';
-                    document.getElementById('ticketTime').textContent = 
-                        new Date(result.data.checkInTime).toLocaleString('vi-VN');
-                    document.getElementById('ticketPrice').textContent = 
-                        result.data.estimatedPrice.toLocaleString('vi-VN') + ' đ';
-                    
-                    document.getElementById('walkInForm').style.display = 'none';
-                    document.getElementById('ticketDisplay').style.display = 'block';
-                } else {
-                    alert('Lỗi: ' + result.message);
-                }
-            } catch (error) {
-                alert('Lỗi kết nối: ' + error.message);
-            }
-        });
-
-        // Reset form
-        function resetForm() {
-            document.getElementById('walkInForm').reset();
-            document.getElementById('walkInForm').style.display = 'block';
-            document.getElementById('ticketDisplay').style.display = 'none';
+        } catch (error) {
+            alert('Lỗi kết nối máy chủ');
         }
+    });
 
-        // Tra cứu thông tin vé
-        async function loadBookingInfo() {
-            let ticketId = document.getElementById('completeTicketId').value.trim();
-            
-            if (!ticketId) {
-                alert('Vui lòng nhập mã vé!');
-                return;
-            }
-            
-            // Loại bỏ "WI" nếu có
-            ticketId = ticketId.replace(/^WI/i, '');
-            
-            try {
-                const response = await fetch(`/staff/api/walk-in/${ticketId}`);
-                const result = await response.json();
-                
-                if (result.success) {
-                    currentBookingId = result.data.bookingId;
-                    
-                    document.getElementById('infoPlate').textContent = result.data.licensePlate;
-                    document.getElementById('infoType').textContent = 
-                        result.data.vehicleType === 'xe_may' ? 'Xe máy' : 'Ô tô';
-                    document.getElementById('infoCheckIn').textContent = 
-                        new Date(result.data.checkInTime).toLocaleString('vi-VN');
-                    document.getElementById('infoDuration').textContent = 
-                        result.data.currentHours + ' giờ';
-                    document.getElementById('infoPrice').textContent = 
-                        result.data.estimatedPrice.toLocaleString('vi-VN') + ' đ';
-                    
-                    document.getElementById('bookingInfo').style.display = 'block';
-                    document.getElementById('completeSuccess').style.display = 'none';
-                } else {
-                    alert('Lỗi: ' + result.message);
-                }
-            } catch (error) {
-                alert('Lỗi kết nối: ' + error.message);
-            }
-        }
+    function resetForm() {
+        document.getElementById('walkInForm').reset();
+        document.getElementById('walkInForm').style.display = 'block';
+        document.getElementById('ticketDisplay').style.display = 'none';
+    }
 
-        // Hoàn thành booking
-        async function completeBooking() {
-            if (!currentBookingId) {
-                alert('Vui lòng tra cứu vé trước!');
-                return;
+    async function loadBookingInfo() {
+        let ticketId = document.getElementById('completeTicketId').value.trim();
+        if (!ticketId) return;
+        ticketId = ticketId.replace(/^WI/i, '');
+        
+        try {
+            const response = await fetch(`/staff/api/walk-in/${ticketId}`);
+            const result = await response.json();
+            if (result.success) {
+                currentBookingId = result.data.bookingId;
+                document.getElementById('infoPlate').textContent = result.data.licensePlate;
+                document.getElementById('infoType').textContent = result.data.vehicleType === 'xe_may' ? 'Xe máy' : 'Ô tô';
+                document.getElementById('infoCheckIn').textContent = new Date(result.data.checkInTime).toLocaleString('vi-VN');
+                document.getElementById('infoDuration').textContent = result.data.currentHours + ' giờ';
+                document.getElementById('infoPrice').textContent = result.data.estimatedPrice.toLocaleString('vi-VN') + ' đ';
+                document.getElementById('bookingInfo').style.display = 'block';
+                document.getElementById('completeSuccess').style.display = 'none';
+            } else {
+                alert('Lỗi: ' + result.message);
             }
-            
-            if (!confirm('Xác nhận hoàn thành và thu tiền?')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/staff/api/walk-in/${currentBookingId}/complete`, {
-                    method: 'POST'
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    document.getElementById('bookingInfo').style.display = 'none';
-                    document.getElementById('completeSuccess').style.display = 'block';
-                    currentBookingId = null;
-                } else {
-                    alert('Lỗi: ' + result.message);
-                }
-            } catch (error) {
-                alert('Lỗi kết nối: ' + error.message);
-            }
+        } catch (error) {
+            alert('Lỗi kết nối máy chủ');
         }
+    }
 
-        // Reset complete form
-        function resetComplete() {
-            document.getElementById('completeForm').reset();
-            document.getElementById('bookingInfo').style.display = 'none';
-            document.getElementById('completeSuccess').style.display = 'none';
-            currentBookingId = null;
+    async function completeBooking() {
+        if (!currentBookingId) return;
+        if (!confirm('Xác nhận đã thu tiền và cho xe ra?')) return;
+        
+        try {
+            const response = await fetch(`/staff/api/walk-in/${currentBookingId}/complete`, { method: 'POST' });
+            const result = await response.json();
+            if (result.success) {
+                document.getElementById('bookingInfo').style.display = 'none';
+                document.getElementById('completeSuccess').style.display = 'block';
+                currentBookingId = null;
+            } else {
+                alert('Lỗi: ' + result.message);
+            }
+        } catch (error) {
+            alert('Lỗi kết nối máy chủ');
         }
-    </script>
+    }
+
+    function resetComplete() {
+        document.getElementById('completeForm').reset();
+        document.getElementById('bookingInfo').style.display = 'none';
+        document.getElementById('completeSuccess').style.display = 'none';
+        currentBookingId = null;
+    }
+</script>
+
 </body>
 </html>

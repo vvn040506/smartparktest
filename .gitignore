@@ -11,3 +11,6 @@
 
 # Loại bỏ tất cả các file tài liệu .md theo yêu cầu
 *.md
+
+# Loại bỏ file zip UI mới
+/src/main/resources/templates.zip

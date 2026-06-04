@@ -3,237 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartPark – Thẻ tháng</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Chi tiết thẻ tháng – SmartPark</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
-        .navbar { background: #0d1b2a; }
-        .card  { border: none; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); }
-        .card-header { background: #0d1b2a; color: white;
-                       border-radius: 16px 16px 0 0 !important; padding: 16px 24px; font-weight: 600; }
-        .info-row { display:flex; justify-content:space-between; align-items:center;
-                    padding: 11px 0; border-bottom: 1px solid #f0f0f0; font-size:14px; }
-        .info-row:last-child { border-bottom: none; }
-        .info-key { color: #6b778c; }
-        .info-val { font-weight: 600; }
-        .amount   { font-size: 24px; color: #6c3483; font-family: monospace; }
-        .qr-wrap  { background: white; border-radius: 12px; padding: 16px;
-                    display: inline-block; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
-        .qr-wrap img { width: 200px; height: 200px; display: block; }
-        .payment-code {
-            font-family: monospace; font-size: 28px; font-weight: 700;
-            letter-spacing: 6px; color: #6c3483;
-            background: #f3e5f5; padding: 12px 24px; border-radius: 10px;
-            display: inline-block;
-        }
-        .badge-pending  { background: #fff7e6; color: #974f0c; border: 1px solid #ffd48a; }
-        .badge-active   { background: #e3fcef; color: #00875a; border: 1px solid #abe2c7; }
-        .badge-expired  { background: #f4f5f7; color: #6b778c; border: 1px solid #dfe1e6; }
-        .badge-cancelled{ background: #ffebe6; color: #bf2600; border: 1px solid #ffbdad; }
-        .hint-box { background: #fffbf0; border: 1px solid #ffd48a;
-                    border-radius: 10px; padding: 14px; font-size: 13px; color: #974f0c; }
+        :root{
+    --bg:#f4f6fb;--surface:#ffffff;--surface2:#f1f5f9;
+    --border:#e2e8f0;--primary:#6366f1;--primary-dark:#4338ca;
+    --green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316;
+    --text:#1e293b;--text-strong:#0f172a;--muted:#64748b;--muted2:#94a3b8;
+    --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;--sidebar:272px;
+}
+* { box-sizing: border-box; }
+body { line-height: 1.6; }
+button, .btn, .btn-submit, .btn-login-submit, .btn-confirm, .btn-action,
+.btn-add, .btn-search, .btn-logout, .btn-outline, .nav-item, .zone-pill,
+.btn-primary, .btn-success, .btn-outline-white, .btn-white {
+    line-height: 1.5;
+    overflow: visible;
+}
+.badge, .version-tag, .admin-badge, .user-role, .status-badge,
+.sc-label, .qs-label, .form-label, label {
+    line-height: 1.5;
+    overflow: visible;
+}
+.nav-item, .nav-link { line-height: 1.5; overflow: visible; }
+.stat-card, .qs-card, .card, .modal { overflow: visible; }
+
+h1,h2,h3,h4,h5,h6,.topbar-title,.login-title,.modal-title,.card-title,.brand-name,.logo-text,
+.page-title,.stat-card .sc-value,.section-title {
+    font-feature-settings: "ss01" 0, "ss02" 0, "ss03" 0, "calt" 0;
+    font-variant-ligatures: none;
+    font-variant-numeric: normal;
+}
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; padding: 24px; }
+        
+        .container { max-width: 520px; margin: 0 auto; }
+        
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+        .logo { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 800; color: var(--text); text-decoration: none; }
+        .logo-icon { width: 36px; height: 36px; background: var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; }
+        .logo span { color: var(--primary); }
+
         .pass-card-active {
-            background: linear-gradient(135deg, #1a2332 0%, #6c3483 100%);
-            color: white; border-radius: 16px; padding: 28px; margin-bottom: 16px;
-            position: relative; overflow: hidden;
+            background: linear-gradient(135deg, #1e293b 0%, #6366f1 100%);
+            color: white; border-radius: 24px; padding: 32px; margin-bottom: 24px;
+            position: relative; overflow: hidden; box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
         }
         .pass-card-active::after {
-            content: '🅿'; position: absolute; right: 20px; top: 50%;
-            transform: translateY(-50%); font-size: 80px; opacity: 0.1;
+            content: '🅿'; position: absolute; right: -10px; top: 50%;
+            transform: translateY(-50%); font-size: 120px; opacity: 0.1; font-weight: 800;
         }
-        .pass-plate { font-size: 32px; font-weight: 800; letter-spacing: 4px; font-family: monospace; }
-        .pass-name  { font-size: 14px; opacity: 0.8; margin-top: 4px; }
-        .pass-dates { font-size: 13px; opacity: 0.7; margin-top: 12px; font-family: monospace; }
+        .pass-plate { font-size: 36px; font-weight: 800; letter-spacing: 2px; font-family: var(--mono); margin: 12px 0; }
+        .pass-name { font-size: 16px; font-weight: 600; opacity: 0.9; }
+        .pass-dates { font-size: 13px; opacity: 0.7; margin-top: 16px; font-family: var(--mono); }
         .pass-status-badge {
             display: inline-block; background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.4); border-radius: 20px;
-            padding: 4px 14px; font-size: 12px; font-weight: 700; margin-top: 10px;
+            backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 12px; padding: 6px 16px; font-size: 12px; font-weight: 800; margin-top: 16px;
         }
-        .success-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.5); z-index: 999;
-            align-items: center; justify-content: center;
-        }
+
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.04); margin-bottom: 24px; }
+        .card-header { font-size: 18px; font-weight: 800; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; }
+
+        .info-row { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .info-row:last-child { border-bottom: none; }
+        .info-key { color: var(--muted); font-weight: 600; font-size: 14px; }
+        .info-val { font-weight: 700; color: var(--text); }
+        .info-val.amount { color: var(--primary); font-family: var(--mono); font-size: 20px; }
+
+        .badge { padding: 6px 14px; border-radius: 10px; font-size: 12px; font-weight: 800; text-transform: uppercase; line-height:1.5;overflow:visible;}
+        .badge-pending { background: #fff7ed; color: #c2410c; }
+        .badge-active { background: #f0fdf4; color: #15803d; }
+        .badge-expired { background: #f1f5f9; color: #475569; }
+        .badge-cancelled { background: #fef2f2; color: #b91c1c; }
+
+        .qr-section { text-align: center; padding: 24px; background: var(--bg); border-radius: 24px; margin-top: 16px; }
+        .qr-wrap { background: white; padding: 16px; border-radius: 20px; display: inline-block; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .qr-wrap img { display: block; max-width: 100%; height: auto; border-radius: 12px; }
+
+        .payment-code { font-family: var(--mono); font-size: 24px; font-weight: 800; letter-spacing: 4px; color: var(--primary); background: rgba(99, 102, 241, 0.1); padding: 12px 24px; border-radius: 16px; display: inline-block; margin: 16px 0; }
+
+        .hint-box { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 20px; padding: 20px; font-size: 14px; color: #92400e; text-align: left; margin-top: 24px; }
+        .hint-box strong { color: #78350f; }
+
+        .btn { width: 100%; padding: 16px; border-radius: 16px; border: none; font-weight: 800; cursor: pointer; transition: all 0.3s; font-family: var(--font); font-size: 15px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 12px; }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2); }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
+        .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--muted); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+        .success-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 24px; }
         .success-overlay.show { display: flex; }
-        .success-box {
-            background: white; border-radius: 20px; padding: 40px 32px; text-align: center;
-            max-width: 360px; width: 90%;
-            animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
-        }
-        @keyframes popIn { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
+        .success-box { background: white; border-radius: 24px; padding: 40px; text-align: center; max-width: 400px; width: 100%; animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .polling-msg { font-size: 13px; color: var(--muted); font-weight: 600; margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spinner { width: 16px; height: 16px; border: 1.5px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-dark px-4 py-3">
-    <a class="navbar-brand fw-bold text-decoration-none" href="/">🅿️ SmartPark</a>
-    <span class="text-white-50" style="font-size:13px">Thẻ tháng</span>
-</nav>
-
-<div class="container py-4" style="max-width:520px">
+<div class="container">
+    <div class="header">
+        <a href="/" class="logo">
+            <div class="logo-icon">🅿️</div>
+            Smart<span>Park</span>
+        </a>
+        <a href="/the-thang" style="color: var(--muted); text-decoration: none; font-weight: 700; font-size: 14px;">← Quay lại</a>
+    </div>
 
     <!-- Thẻ hiển thị khi ACTIVE -->
     <div th:if="${pass.status == 'ACTIVE'}" class="pass-card-active">
-        <div style="font-size:12px;opacity:0.6;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
+        <div style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing: 0.8px; opacity:0.8;">
             🎫 Thẻ tháng SmartPark
         </div>
         <div class="pass-plate" th:text="${pass.licensePlate}">51A-12345</div>
         <div class="pass-name" th:text="${pass.ownerName}">Nguyễn Văn A</div>
-        <div class="pass-dates"
-             th:text="${#temporals.format(pass.startDate,'dd/MM/yyyy')} + ' → ' + ${#temporals.format(pass.endDate,'dd/MM/yyyy')}">
-        </div>
+        <div class="pass-dates" th:text="${#temporals.format(pass.startDate,'dd/MM/yyyy')} + ' → ' + ${#temporals.format(pass.endDate,'dd/MM/yyyy')}"></div>
         <div class="pass-status-badge">✓ ĐANG HIỆU LỰC</div>
     </div>
 
     <!-- Thông tin chi tiết -->
-    <div class="card mb-3">
+    <div class="card">
         <div class="card-header">
-            🎫 Thẻ tháng #<span th:text="${pass.id}"></span>
-            &nbsp;
-            <span class="badge rounded-pill"
+            <span>🎫 Chi tiết thẻ #<span th:text="${pass.id}"></span></span>
+            <span class="badge"
                   th:classappend="${pass.status == 'ACTIVE'} ? 'badge-active' :
                                   (${pass.status == 'PENDING'} ? 'badge-pending' :
                                   (${pass.status == 'EXPIRED'} ? 'badge-expired' : 'badge-cancelled'))"
-                  th:text="${pass.status == 'ACTIVE'} ? '✓ Đang hiệu lực' :
-                            (${pass.status == 'PENDING'} ? '⏳ Chờ thanh toán' :
-                            (${pass.status == 'EXPIRED'} ? '⌛ Hết hạn' : '✗ Đã huỷ'))">
+                  th:text="${pass.status == 'ACTIVE'} ? 'Đang hiệu lực' :
+                            (${pass.status == 'PENDING'} ? 'Chờ thanh toán' :
+                            (${pass.status == 'EXPIRED'} ? 'Hết hạn' : 'Đã huỷ'))">
             </span>
         </div>
-        <div class="card-body px-4">
-            <div class="info-row">
-                <span class="info-key">Chủ xe</span>
-                <span class="info-val" th:text="${pass.ownerName}"></span>
-            </div>
-            <div class="info-row" th:if="${pass.email != null and !#strings.isEmpty(pass.email)}">
-                <span class="info-key">Email</span>
-                <span class="info-val" th:text="${pass.email}"></span>
-            </div>
-            <div class="info-row">
-                <span class="info-key">Biển số xe</span>
-                <span class="info-val" th:text="${pass.licensePlate}"></span>
-            </div>
-            <div class="info-row">
-                <span class="info-key">Loại xe</span>
-                <span class="info-val" th:text="${pass.vehicleType == 'o_to'} ? '🚗 Ô tô' : '🏍️ Xe máy'"></span>
-            </div>
-            <div class="info-row">
-                <span class="info-key">Hiệu lực từ</span>
-                <span class="info-val" th:text="${#temporals.format(pass.startDate,'dd/MM/yyyy')}"></span>
-            </div>
-            <div class="info-row">
-                <span class="info-key">Hiệu lực đến</span>
-                <span class="info-val" th:text="${#temporals.format(pass.endDate,'dd/MM/yyyy')}"></span>
-            </div>
-            <div class="info-row">
-                <span class="info-key">Số tiền</span>
-                <span class="info-val amount"
-                      th:text="${#numbers.formatInteger(pass.amountDue, 0, 'COMMA') + ' đ'}"></span>
-            </div>
-            <div class="info-row" th:if="${pass.note != null and !#strings.isEmpty(pass.note)}">
-                <span class="info-key">Ghi chú</span>
-                <span class="info-val" th:text="${pass.note}"></span>
-            </div>
-            <div class="info-row" th:if="${pass.paidAt != null}">
-                <span class="info-key">Thanh toán lúc</span>
-                <span class="info-val" th:text="${#temporals.format(pass.paidAt,'HH:mm dd/MM/yyyy')}"></span>
-            </div>
+        
+        <div class="info-row">
+            <span class="info-key">Chủ xe</span>
+            <span class="info-val" th:text="${pass.ownerName}"></span>
+        </div>
+        <div class="info-row" th:if="${pass.email != null and !#strings.isEmpty(pass.email)}">
+            <span class="info-key">Email</span>
+            <span class="info-val" th:text="${pass.email}"></span>
+        </div>
+        <div class="info-row">
+            <span class="info-key">Biển số xe</span>
+            <span class="info-val" th:text="${pass.licensePlate}"></span>
+        </div>
+        <div class="info-row">
+            <span class="info-key">Loại xe</span>
+            <span class="info-val" th:text="${pass.vehicleType == 'o_to'} ? '🚗 Ô tô' : '🏍️ Xe máy'"></span>
+        </div>
+        <div class="info-row">
+            <span class="info-key">Thời hạn</span>
+            <span class="info-val" th:text="${#temporals.format(pass.startDate,'dd/MM/yyyy')} + ' - ' + ${#temporals.format(pass.endDate,'dd/MM/yyyy')}"></span>
+        </div>
+        <div class="info-row">
+            <span class="info-key">Số tiền</span>
+            <span class="info-val amount" th:text="${#numbers.formatInteger(pass.amountDue, 0, 'COMMA') + ' đ'}"></span>
+        </div>
+        <div class="info-row" th:if="${pass.paidAt != null}">
+            <span class="info-key">Thanh toán lúc</span>
+            <span class="info-val" th:text="${#temporals.format(pass.paidAt,'HH:mm dd/MM/yyyy')}"></span>
         </div>
     </div>
 
-    <!-- QR Thanh toán (chỉ hiện khi PENDING) -->
-    <div th:if="${pass.status == 'PENDING'}">
-        <div class="card mb-3">
-            <div class="card-header">💳 Thanh toán để kích hoạt thẻ</div>
-            <div class="card-body p-4 text-center">
-                <div class="mb-3">
-                    <div class="qr-wrap">
-                        <img th:src="${qrUrl}" alt="QR VietQR"
-                             onerror="this.src='https://placehold.co/200x200?text=QR+Code'">
-                    </div>
-                    <div class="mt-2 text-muted" style="font-size:12px">Quét bằng app ngân hàng bất kỳ</div>
-                </div>
-                <hr>
-                <div class="mb-3">
-                    <div class="text-muted mb-1" style="font-size:12px;text-transform:uppercase;letter-spacing:1px">
-                        Nội dung chuyển khoản
-                    </div>
-                    <div class="payment-code" th:text="${pass.paymentCode}">MPXXXXXX</div>
-                    <div class="text-danger mt-2" style="font-size:12px">
-                        ⚠️ Nhập ĐÚNG nội dung này để tự động kích hoạt thẻ
-                    </div>
-                </div>
-                <div class="hint-box text-start">
-                    <div class="fw-bold mb-1">Thông tin chuyển khoản:</div>
-                    <div>🏦 Ngân hàng: <strong th:text="${bankName}"></strong></div>
-                    <div>💳 Số TK: <strong th:text="${bankAccount}"></strong></div>
-                    <div>👤 Tên TK: <strong th:text="${bankOwner}"></strong></div>
-                    <div>💰 Số tiền: <strong th:text="${#numbers.formatInteger(pass.amountDue,0,'COMMA') + ' đ'}"></strong></div>
-                    <div>📝 Nội dung: <strong th:text="${pass.paymentCode}"></strong></div>
-                </div>
+    <!-- QR Thanh toán (PENDING) -->
+    <div th:if="${pass.status == 'PENDING'}" class="card" style="text-align: center;">
+        <div class="card-header" style="justify-content: center;">💳 Thanh toán kích hoạt</div>
+        
+        <div class="qr-section">
+            <div class="qr-wrap">
+                <img th:src="${qrUrl}" alt="QR VietQR" onerror="this.src='https://placehold.co/200x200?text=QR+Code'">
             </div>
+            <p style="font-size: 12px; color: var(--muted); margin-top: 12px; font-weight: 600;">Quét bằng ứng dụng ngân hàng</p>
         </div>
-        <div class="text-center text-muted mb-4" style="font-size:13px" id="polling-msg">
-            🔄 Đang chờ xác nhận thanh toán...
+
+        <div style="margin-top: 24px;">
+            <p style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--muted); letter-spacing: 0.8px;">Nội dung chuyển khoản</p>
+            <div class="payment-code" th:text="${pass.paymentCode}">MPXXXXXX</div>
+            <p style="font-size: 12px; color: var(--red); font-weight: 700;">⚠️ Nhập chính xác nội dung để kích hoạt tự động</p>
+        </div>
+
+        <div class="hint-box">
+            <div style="font-weight: 800; margin-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 8px;">Thông tin tài khoản</div>
+            <div style="margin-bottom: 6px;">Ngân hàng: <strong th:text="${bankName}"></strong></div>
+            <div style="margin-bottom: 6px;">Số tài khoản: <strong th:text="${bankAccount}"></strong></div>
+            <div style="margin-bottom: 6px;">Chủ tài khoản: <strong th:text="${bankOwner}"></strong></div>
+            <div>Số tiền: <strong th:text="${#numbers.formatInteger(pass.amountDue,0,'COMMA') + ' đ'}"></strong></div>
+        </div>
+
+        <div class="polling-msg">
+            <div class="spinner"></div>
+            Đang chờ xác nhận thanh toán...
         </div>
     </div>
 
-    <!-- Đã kích hoạt -->
-    <div th:if="${pass.status == 'ACTIVE'}" class="card mb-3">
-        <div class="card-body p-4 text-center">
-            <div style="font-size:48px">✅</div>
-            <h5 class="fw-bold text-success mt-2">Thẻ đang hiệu lực!</h5>
-            <p class="text-muted" style="font-size:13px">Xe của bạn được ra vào tự do đến hết ngày
-                <strong th:text="${#temporals.format(pass.endDate,'dd/MM/yyyy')}"></strong>
+    <!-- QR Thẻ tháng (ACTIVE) -->
+    <div th:if="${pass.status == 'ACTIVE'}" class="card" style="text-align: center;">
+        <div class="card-header" style="justify-content: center;">📱 QR Code Thẻ tháng</div>
+        <div class="qr-section">
+            <div class="qr-wrap">
+                <img th:src="${passQR}" alt="QR Thẻ tháng" style="width:250px;height:250px">
+            </div>
+            <p style="font-size: 13px; color: var(--muted); margin-top: 16px; font-weight: 600; line-height: 1.5;">
+                Vui lòng xuất trình mã này khi vào bãi xe.<br>Bạn có thể tải về để sử dụng ngoại tuyến.
             </p>
-            
-            <!-- QR Code thẻ tháng -->
-            <div th:if="${passQR != null}" class="mt-4">
-                <hr>
-                <h6 class="fw-bold mb-3">🎫 QR Code thẻ tháng của bạn</h6>
-                <div class="qr-wrap">
-                    <img th:src="${passQR}" alt="QR Thẻ tháng" style="width:250px;height:250px">
-                </div>
-                <p class="mt-3 text-muted" style="font-size:13px">
-                    📱 Chụp màn hình hoặc lưu ảnh này<br>
-                    Xuất trình khi vào bãi xe
-                </p>
-                <button class="btn btn-primary mt-2" onclick="downloadQR()">
-                    💾 Tải QR Code
-                </button>
-            </div>
         </div>
+        <button class="btn btn-primary" style="margin-top: 24px;" onclick="downloadQR()">💾 Tải mã QR</button>
     </div>
 
-    <script th:if="${passQR != null}">
-    function downloadQR() {
-        const link = document.createElement('a');
-        link.href = /*[[${passQR}]]*/ '';
-        link.download = 'the-thang-' + /*[[${pass.paymentCode}]]*/ '' + '.png';
-        link.click();
-    }
-    </script>
-
-    <a href="/the-thang" class="btn btn-outline-secondary w-100 mb-2">← Đăng ký thẻ tháng mới</a>
-    <a href="/" class="btn btn-outline-secondary w-100">← Trang chủ</a>
+    <a href="/the-thang" class="btn btn-outline">Đăng ký thẻ mới</a>
+    <a href="/" class="btn btn-outline">Quay lại trang chủ</a>
 </div>
 
-<!-- Popup kích hoạt thành công -->
+<!-- Success Popup -->
 <div class="success-overlay" id="success-overlay">
     <div class="success-box">
-        <div style="font-size:64px">🎉</div>
-        <div style="font-size:20px;font-weight:700;color:#00875a;margin-bottom:8px">Thẻ đã được kích hoạt!</div>
-        <div style="font-size:14px;color:#6b778c;margin-bottom:24px">
-            Xe của bạn có thể ra vào tự do trong suốt thời gian hiệu lực.
-        </div>
-        <button class="btn btn-success w-100" onclick="location.reload()">Xem thẻ</button>
+        <div style="font-size: 64px; margin-bottom: 16px;">🎉</div>
+        <h3 style="font-weight: 800; color: var(--green); margin-bottom: 12px;">Kích hoạt thành công!</h3>
+        <p style="font-size: 15px; color: var(--muted); margin-bottom: 32px; line-height: 1.6;">Thẻ tháng của bạn đã sẵn sàng. Bạn có thể ra vào bãi xe ngay bây giờ.</p>
+        <button class="btn btn-primary" onclick="location.reload()">Xem thẻ ngay</button>
     </div>
 </div>
+
+<script th:if="${passQR != null}" th:inline="javascript">
+function downloadQR() {
+    const link = document.createElement('a');
+    link.href = /*[[${passQR}]]*/ '';
+    link.download = 'SmartPark-MonthlyPass-' + /*[[${pass.paymentCode}]]*/ '' + '.png';
+    link.click();
+}
+</script>
 
 <script th:if="${pass.status == 'PENDING'}" th:inline="javascript">
     const passId = /*[[${pass.id}]]*/ 0;
     const interval = setInterval(async () => {
         try {
-            const res  = await fetch(`/api/monthly-passes/${passId}`);
+            const res = await fetch(`/api/monthly-passes/${passId}`);
             const data = await res.json();
             if (data.data && data.data.status === 'ACTIVE') {
                 clearInterval(interval);
@@ -242,5 +252,6 @@
         } catch(e) {}
     }, 3000);
 </script>
+
 </body>
 </html>

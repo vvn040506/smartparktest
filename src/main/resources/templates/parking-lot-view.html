@@ -1,250 +1,231 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xem Bãi Đỗ Xe - SmartPark</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <title>Sơ đồ bãi đỗ – SmartPark</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .card {
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .slot {
-            width: 50px;
-            height: 50px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin: 3px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        .slot.empty {
-            background: #d4edda;
-            border-color: #28a745;
-            color: #155724;
-        }
-        .slot.occupied {
-            background: #f8d7da;
-            border-color: #dc3545;
-            color: #721c24;
-        }
-        .slot.reserved {
-            background: #fff3cd;
-            border-color: #ffc107;
-            color: #856404;
-        }
-        .stats-card {
-            background: white;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .stats-number {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #667eea;
-        }
-        .zone-title {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-        }
-        .legend {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin: 20px 0;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .legend-box {
-            width: 30px;
-            height: 30px;
-            border-radius: 5px;
-            border: 2px solid;
+        :root{
+    --bg:#f4f6fb;--surface:#ffffff;--surface2:#f1f5f9;
+    --border:#e2e8f0;--primary:#6366f1;--primary-dark:#4338ca;
+    --green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316;
+    --text:#1e293b;--text-strong:#0f172a;--muted:#64748b;--muted2:#94a3b8;
+    --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;--sidebar:272px;
+}
+* { box-sizing: border-box; }
+body { line-height: 1.6; }
+button, .btn, .btn-submit, .btn-login-submit, .btn-confirm, .btn-action,
+.btn-add, .btn-search, .btn-logout, .btn-outline, .nav-item, .zone-pill,
+.btn-primary, .btn-success, .btn-outline-white, .btn-white {
+    line-height: 1.5;
+    overflow: visible;
+}
+.badge, .version-tag, .admin-badge, .user-role, .status-badge,
+.sc-label, .qs-label, .form-label, label {
+    line-height: 1.5;
+    overflow: visible;
+}
+.nav-item, .nav-link { line-height: 1.5; overflow: visible; }
+.stat-card, .qs-card, .card, .modal { overflow: visible; }
+
+h1,h2,h3,h4,h5,h6,.topbar-title,.login-title,.modal-title,.card-title,.brand-name,.logo-text,
+.page-title,.stat-card .sc-value,.section-title {
+    font-feature-settings: "ss01" 0, "ss02" 0, "ss03" 0, "calt" 0;
+    font-variant-ligatures: none;
+    font-variant-numeric: normal;
+}
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; padding: 24px; }
+        
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        .header { text-align: center; margin-bottom: 40px; }
+        .logo { display: inline-flex; align-items: center; gap: 12px; font-size: 24px; font-weight: 800; color: var(--text); text-decoration: none; margin-bottom: 16px; }
+        .logo-icon { width: 44px; height: 44px; background: var(--primary); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: white; }
+        .logo span { color: var(--primary); }
+        .header p { color: var(--muted); font-weight: 600; font-size: 15px; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 24px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
+        .stat-val { font-size: 32px; font-weight: 800; font-family: var(--mono); margin-bottom: 4px; }
+        .stat-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); }
+
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.04); margin-bottom: 32px; }
+        .card-title { font-size: 20px; font-weight: 800; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+
+        .legend { display: flex; justify-content: center; gap: 32px; margin-bottom: 32px; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: var(--muted); }
+        .legend-box { width: 24px; height: 24px; border-radius: 8px; border: 2px solid; }
+
+        .zone-header { background: var(--bg); border-radius: 20px; padding: 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+        .zone-info h4 { font-weight: 800; font-size: 18px; }
+        .zone-info p { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+        .slot-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+        .slot { width: 48px; height: 48px; border-radius: 12px; border: 2px solid; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 10px; font-weight: 700; transition: all 0.2s; cursor: default; }
+        
+        .slot.empty { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+        .slot.occupied { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+        .slot.reserved { background: #fffbeb; border-color: #fef3c7; color: #b45309; }
+
+        .row-label { width: 100%; text-align: center; font-size: 12px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin: 24px 0 12px; }
+
+        .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .price-item { background: var(--bg); border-radius: 20px; padding: 20px; }
+        .price-item h6 { font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .price-list { list-style: none; }
+        .price-list li { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; font-weight: 600; }
+        .price-list li strong { color: var(--primary); font-family: var(--mono); }
+
+        .cta-section { text-align: center; padding: 40px; background: linear-gradient(135deg, #1e293b 0%, #6366f1 100%); border-radius: 24px; color: white; }
+        .cta-section h3 { font-weight: 800; margin-bottom: 12px; }
+        .cta-section p { opacity: 0.8; margin-bottom: 24px; font-weight: 600; }
+        .btn-group { display: flex; gap: 16px; justify-content: center; }
+        
+        .btn { padding: 14px 28px; border-radius: 16px; border: none; font-weight: 800; cursor: pointer; transition: all 0.3s; font-family: var(--font); font-size: 15px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; }
+        .btn-white { background: white; color: var(--text); }
+        .btn-white:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .btn-outline-white { background: transparent; border: 2px solid rgba(255,255,255,0.3); color: white; }
+        .btn-outline-white:hover { border-color: white; background: rgba(255,255,255,0.1); }
+        
+        .back-btn { display: block; text-align: center; margin-top: 32px; color: var(--muted); text-decoration: none; font-weight: 700; font-size: 14px; }
+        .back-btn:hover { color: var(--primary); }
+
+        @media (max-width: 768px) {
+            .stats-grid, .pricing-grid { grid-template-columns: 1fr; }
+            .btn-group { flex-direction: column; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="text-center text-white mb-4">
-            <h1><i class="bi bi-map"></i> Sơ Đồ Bãi Đỗ Xe</h1>
-            <p>Xem tình trạng bãi đỗ xe real-time</p>
-            <p class="small">Cập nhật tự động mỗi 30 giây</p>
-        </div>
 
-        <!-- Stats Overview -->
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="stats-card text-center">
-                    <div class="stats-number" th:text="${total}">80</div>
-                    <div class="text-muted">Tổng số chỗ</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stats-card text-center">
-                    <div class="stats-number text-success" th:text="${empty}">35</div>
-                    <div class="text-muted">Chỗ trống</div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="stats-card text-center">
-                    <div class="stats-number text-danger" th:text="${filled}">45</div>
-                    <div class="text-muted">Đã đỗ</div>
-                </div>
-            </div>
-        </div>
+<div class="container">
+    <div class="header">
+        <a href="/" class="logo">
+            <div class="logo-icon">🅿️</div>
+            Smart<span>Park</span>
+        </a>
+        <p>Tình trạng bãi đỗ xe thời gian thực (Tự động cập nhật sau 30s)</p>
+    </div>
 
-        <!-- Legend -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-box empty"></div>
-                        <span>Trống</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box occupied"></div>
-                        <span>Đã đỗ</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-box reserved"></div>
-                        <span>Đã đặt</span>
-                    </div>
-                </div>
-            </div>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-val" th:text="${total}">80</div>
+            <div class="stat-label">Tổng số chỗ</div>
         </div>
-
-        <!-- Pricing Info -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-cash-coin"></i> Bảng Giá</h5>
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6><i class="bi bi-bicycle"></i> Xe máy</h6>
-                        <ul>
-                            <li>Đỗ thường: <strong>10,000 đ/giờ</strong></li>
-                            <li>Đặt trước: <strong>20,000 đ/12 giờ</strong></li>
-                            <li>Thẻ tháng: <strong>200,000 đ/tháng</strong></li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h6><i class="bi bi-car-front"></i> Ô tô</h6>
-                        <ul>
-                            <li>Đỗ thường: <strong>20,000 đ/giờ</strong></li>
-                            <li>Đặt trước: <strong>40,000 đ/12 giờ</strong></li>
-                            <li>Thẻ tháng: <strong>500,000 đ/tháng</strong></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-val" style="color: var(--green);" th:text="${empty}">35</div>
+            <div class="stat-label">Chỗ trống</div>
         </div>
-
-        <!-- Motorbike Zone -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="zone-title text-center">
-                    <h4><i class="bi bi-bicycle"></i> Khu Xe Máy</h4>
-                    <p class="mb-0">
-                        Trống: <span th:text="${motoEmpty}">23</span> / 
-                        Tổng: <span th:text="${motoTotal}">50</span>
-                    </p>
-                </div>
-                
-                <div th:each="row : ${motoRows}" class="mb-3">
-                    <div class="text-center mb-2">
-                        <strong>Dãy <span th:text="${row}">A</span></strong>
-                    </div>
-                    <div class="text-center">
-                        <th:block th:each="i : ${#numbers.sequence(1, 10)}">
-                            <th:block th:with="slotId=${'M-' + row + '-' + (#strings.toString(i).length() == 1 ? '0' + i : i)}">
-                                <th:block th:each="slot : ${motoSlots}">
-                                    <span th:if="${slot.id == slotId}"
-                                          th:class="${'slot ' + (slot.occupied ? 'occupied' : (slot.reserved ? 'reserved' : 'empty'))}"
-                                          th:text="${slotId}">M-A-01</span>
-                                </th:block>
-                            </th:block>
-                        </th:block>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Car Zone -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="zone-title text-center">
-                    <h4><i class="bi bi-car-front"></i> Khu Ô Tô</h4>
-                    <p class="mb-0">
-                        Trống: <span th:text="${carEmpty}">12</span> / 
-                        Tổng: <span th:text="${carTotal}">30</span>
-                    </p>
-                </div>
-                
-                <div th:each="row : ${carRows}" class="mb-3">
-                    <div class="text-center mb-2">
-                        <strong>Dãy <span th:text="${row}">A</span></strong>
-                    </div>
-                    <div class="text-center">
-                        <th:block th:each="i : ${#numbers.sequence(1, 10)}">
-                            <th:block th:with="slotId=${'C-' + row + '-' + (#strings.toString(i).length() == 1 ? '0' + i : i)}">
-                                <th:block th:each="slot : ${carSlots}">
-                                    <span th:if="${slot.id == slotId}"
-                                          th:class="${'slot ' + (slot.occupied ? 'occupied' : (slot.reserved ? 'reserved' : 'empty'))}"
-                                          th:text="${slotId}">C-A-01</span>
-                                </th:block>
-                            </th:block>
-                        </th:block>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- CTA Buttons -->
-        <div class="card">
-            <div class="card-body text-center">
-                <h5 class="mb-3">Muốn đặt chỗ trước?</h5>
-                <a href="/login" class="btn btn-primary btn-lg me-2">
-                    <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
-                </a>
-                <a href="/register" class="btn btn-success btn-lg">
-                    <i class="bi bi-person-plus"></i> Đăng ký
-                </a>
-            </div>
-        </div>
-
-        <!-- Back Button -->
-        <div class="text-center mt-3">
-            <a href="/" class="btn btn-light">
-                <i class="bi bi-arrow-left"></i> Trang chủ
-            </a>
+        <div class="stat-card">
+            <div class="stat-val" style="color: var(--red);" th:text="${filled}">45</div>
+            <div class="stat-label">Đã đỗ</div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Auto refresh every 30 seconds
-        setInterval(function() {
-            location.reload();
-        }, 30000);
-    </script>
+    <div class="card">
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box empty"></div>
+                <span>Trống</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box occupied"></div>
+                <span>Đã đỗ</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box reserved"></div>
+                <span>Đã đặt</span>
+            </div>
+        </div>
+
+        <!-- Khu Xe Máy -->
+        <div class="zone-header">
+            <div class="zone-info">
+                <h4>🏍️ Khu Xe Máy</h4>
+                <p>Trống: <span th:text="${motoEmpty}">23</span> / Tổng: <span th:text="${motoTotal}">50</span></p>
+            </div>
+        </div>
+        
+        <div th:each="row : ${motoRows}">
+            <div class="row-label">Dãy <span th:text="${row}">A</span></div>
+            <div class="slot-grid">
+                <th:block th:each="i : ${#numbers.sequence(1, 10)}">
+                    <th:block th:with="slotId=${'M-' + row + '-' + (#strings.toString(i).length() == 1 ? '0' + i : i)}">
+                        <th:block th:each="slot : ${motoSlots}">
+                            <div th:if="${slot.id == slotId}"
+                                 th:class="${'slot ' + (slot.occupied ? 'occupied' : (slot.reserved ? 'reserved' : 'empty'))}"
+                                 th:text="${slotId}">M-A-01</div>
+                        </th:block>
+                    </th:block>
+                </th:block>
+            </div>
+        </div>
+
+        <!-- Khu Ô Tô -->
+        <div class="zone-header" style="margin-top: 48px;">
+            <div class="zone-info">
+                <h4>🚗 Khu Ô Tô</h4>
+                <p>Trống: <span th:text="${carEmpty}">12</span> / Tổng: <span th:text="${carTotal}">30</span></p>
+            </div>
+        </div>
+        
+        <div th:each="row : ${carRows}">
+            <div class="row-label">Dãy <span th:text="${row}">A</span></div>
+            <div class="slot-grid">
+                <th:block th:each="i : ${#numbers.sequence(1, 10)}">
+                    <th:block th:with="slotId=${'C-' + row + '-' + (#strings.toString(i).length() == 1 ? '0' + i : i)}">
+                        <th:block th:each="slot : ${carSlots}">
+                            <div th:if="${slot.id == slotId}"
+                                 th:class="${'slot ' + (slot.occupied ? 'occupied' : (slot.reserved ? 'reserved' : 'empty'))}"
+                                 th:text="${slotId}">C-A-01</div>
+                        </th:block>
+                    </th:block>
+                </th:block>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">💰 Bảng giá dịch vụ</div>
+        <div class="pricing-grid">
+            <div class="price-item">
+                <h6>🏍️ Xe máy</h6>
+                <ul class="price-list">
+                    <li><span>Đỗ thường</span> <strong>10,000 đ/giờ</strong></li>
+                    <li><span>Đặt trước</span> <strong>20,000 đ/12h</strong></li>
+                    <li><span>Thẻ tháng</span> <strong>200,000 đ/tháng</strong></li>
+                </ul>
+            </div>
+            <div class="price-item">
+                <h6>🚗 Ô tô</h6>
+                <ul class="price-list">
+                    <li><span>Đỗ thường</span> <strong>20,000 đ/giờ</strong></li>
+                    <li><span>Đặt trước</span> <strong>40,000 đ/12h</strong></li>
+                    <li><span>Thẻ tháng</span> <strong>500,000 đ/tháng</strong></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="cta-section">
+        <h3>Muốn đặt chỗ trước?</h3>
+        <p>Đăng ký tài khoản để trải nghiệm đầy đủ tính năng của SmartPark</p>
+        <div class="btn-group">
+            <a href="/login" class="btn btn-white">Đăng nhập ngay</a>
+            <a href="/register" class="btn btn-outline-white">Tạo tài khoản mới</a>
+        </div>
+    </div>
+
+    <a href="/" class="back-btn">← Quay lại trang chủ</a>
+</div>
+
+<script>
+    setInterval(() => location.reload(), 30000);
+</script>
+
 </body>
 </html>

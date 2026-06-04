@@ -6,39 +6,117 @@
     <title>Dashboard Khách hàng - SmartPark</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
-        .navbar { background: #0d1b2a; }
-        .card { border: none; border-radius: 16px; box-shadow: 0 2px 16px rgba(0,0,0,0.08); margin-bottom: 24px; }
-        .nav-tabs { border-bottom: none; margin-bottom: 20px; }
-        .nav-tabs .nav-link { border: none; color: #64748b; font-weight: 500; padding: 12px 20px; border-radius: 10px; margin-right: 8px; }
-        .nav-tabs .nav-link.active { background: #1b4f8a; color: white; }
-        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-        .status-pending { background: #fef3c7; color: #92400e; }
-        .status-paid { background: #dcfce7; color: #166534; }
-        .status-active { background: #dcfce7; color: #166534; }
-        .status-cancelled { background: #fee2e2; color: #991b1b; }
-        .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 8px; }
-        .slot-item { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .slot-empty { background: #e2e8f0; color: #64748b; }
-        .slot-filled { background: #ef4444; color: white; }
-        .slot-reserved { background: #f59e0b; color: white; }
-        .slot-selected { background: #1b4f8a !important; color: white !important; transform: scale(1.1); box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1b4f8a; }
+        :root{
+    --bg:#f4f6fb;--surface:#ffffff;--surface2:#f1f5f9;
+    --border:#e2e8f0;--primary:#6366f1;--primary-dark:#4338ca;
+    --green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316;
+    --text:#1e293b;--text-strong:#0f172a;--muted:#64748b;--muted2:#94a3b8;
+    --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;--sidebar:272px;
+}
+* { box-sizing: border-box; }
+body { line-height: 1.6; }
+button, .btn, .btn-submit, .btn-login-submit, .btn-confirm, .btn-action,
+.btn-add, .btn-search, .btn-logout, .btn-outline, .nav-item, .zone-pill,
+.btn-primary, .btn-success, .btn-outline-white, .btn-white {
+    line-height: 1.5;
+    overflow: visible;
+}
+.badge, .version-tag, .admin-badge, .user-role, .status-badge,
+.sc-label, .qs-label, .form-label, label {
+    line-height: 1.5;
+    overflow: visible;
+}
+.nav-item, .nav-link { line-height: 1.5; overflow: visible; }
+.stat-card, .qs-card, .card, .modal { overflow: visible; }
+
+h1,h2,h3,h4,h5,h6,.topbar-title,.login-title,.modal-title,.card-title,.brand-name,.logo-text,
+.page-title,.stat-card .sc-value,.section-title {
+    font-feature-settings: "ss01" 0, "ss02" 0, "ss03" 0, "calt" 0;
+    font-variant-ligatures: none;
+    font-variant-numeric: normal;
+}
+
+        body { background: var(--bg); color: var(--text); font-family: var(--font); }
+        .navbar { background: #0f172a; padding: 1rem 0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .navbar-brand { font-size: 22px; font-weight: 700; letter-spacing: normal; }
+        .navbar-brand span { color: var(--primary); }
+        
+        .card { border: 1px solid var(--border); border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.02); margin-bottom: 24px; overflow: hidden; background: var(--surface); transition: all 0.3s; }
+        .card:hover { box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
+        
+        .nav-tabs { border-bottom: none; margin-bottom: 0; }
+        .nav-tabs .nav-link { 
+            border: none; color: var(--muted); font-weight: 700; padding: 14px 20px; 
+            border-radius: 16px; margin-bottom: 8px; transition: all 0.3s; font-size: 14px;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .nav-tabs .nav-link:hover { background: rgba(99, 102, 241, 0.05); color: var(--primary); }
+        .nav-tabs .nav-link.active { background: var(--primary); color: white; box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2); }
+        
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.5px; }
+        .status-pending { background: rgba(245,158,11,0.1); color: var(--yellow); border: 1px solid rgba(245,158,11,0.2); }
+        .status-paid { background: rgba(16,185,129,0.1); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
+        .status-active { background: rgba(16,185,129,0.1); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
+        .status-cancelled { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+        
+        .slot-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 10px; }
+        .slot-item { 
+            aspect-ratio: 1; display: flex; align-items: center; justify-content: center; 
+            border-radius: 12px; font-size: 11px; font-weight: 800; font-family: var(--mono);
+            cursor: pointer; transition: all 0.2s; border: 1.5px solid var(--border);
+        }
+        .slot-empty { background: #fcfdfe; color: var(--muted); }
+        .slot-filled { background: rgba(239,68,68,0.08); color: var(--red); border-color: rgba(239,68,68,0.15); }
+        .slot-reserved { background: rgba(245,158,11,0.08); color: var(--yellow); border-color: rgba(245,158,11,0.15); }
+        .slot-selected { background: var(--primary) !important; color: white !important; border-color: var(--primary) !important; transform: scale(1.1); box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3); }
+        
+        .form-label { font-weight: 700; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; font-family: var(--mono); }
+        .form-control, .form-select { 
+            border-radius: 14px; border: 1.5px solid var(--border); padding: 12px 18px; 
+            font-family: var(--font); font-size: 15px; transition: all 0.2s; background: #fcfdfe;
+        }
+        .form-control:focus, .form-select:focus { 
+            border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); outline: none; background: white;
+        }
+        
+        .btn-primary { background: var(--primary); border: none; border-radius: 14px; padding: 12px 24px; font-weight: 800; transition: all 0.3s; box-shadow: 0 8px 20px rgba(99, 102, 241, 0.2); }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 12px 25px rgba(99, 102, 241, 0.3); }
+        
+        .btn-outline-primary { border-radius: 14px; border-width: 2px; font-weight: 700; }
+        
+        .card-title { font-weight: 700; letter-spacing: normal; font-size: 1.5rem; }
+        .table thead th { font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); border-bottom: 2px solid var(--border); font-family: var(--mono); }
+        .table td { padding: 16px 12px; vertical-align: middle; font-weight: 600; font-size: 14px; }
+        
+        .user-info { display: flex; align-items: center; gap: 12px; }
+        .user-avatar { width: 36px; height: 36px; background: var(--primary); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; }
+        
+        .modal-content { border-radius: 28px; border: none; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .modal-header { border-bottom: 1px solid var(--border); padding: 24px 32px; }
+        .modal-title { font-weight: 700; letter-spacing: normal; }
+        .modal-body { padding: 32px; }
+        .modal-footer { border-top: 1px solid var(--border); padding: 20px 32px; }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-dark px-4 py-3 mb-4">
-    <div class="container-fluid">
-        <span class="navbar-brand fw-bold">🅿️ SmartPark</span>
+<nav class="navbar navbar-expand-lg navbar-dark mb-5">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">🅿️ Smart<span>Park</span></a>
         <div class="d-flex align-items-center">
-            <span class="text-white me-3" th:text="'Chào, ' + ${currentUser.username}"></span>
-            <a href="/logout" class="btn btn-outline-light btn-sm">Đăng xuất</a>
+            <div class="user-info me-4">
+                <div class="user-avatar" th:text="${#strings.substring(currentUser.username,0,1).toUpperCase()}">U</div>
+                <span class="text-white fw-bold" style="font-size: 14px; letter-spacing: 0.5px;" th:text="${currentUser.username}">User</span>
+            </div>
+            <a href="/logout" class="btn btn-outline-light btn-sm px-4" style="border-radius: 12px; font-weight: 700; font-size: 12px; border-width: 2px;">Đăng xuất</a>
         </div>
     </div>
 </nav>
 
-<div class="container">
+<div class="container pb-5">
     <div class="row">
         <!-- Sidebar / Tabs -->
         <div class="col-lg-3">
@@ -46,22 +124,22 @@
                 <ul class="nav flex-column nav-tabs" id="dashboardTabs" role="tablist">
                     <li class="nav-item">
                         <a class="nav-link active" id="history-tab" data-bs-toggle="tab" href="#history" role="tab">
-                            <i class="bi bi-clock-history me-2"></i>Lịch sử đặt vé
+                            <i class="bi bi-clock-history"></i>Lịch sử đặt vé
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" id="passes-tab" data-bs-toggle="tab" href="#passes" role="tab">
-                            <i class="bi bi-card-list me-2"></i>Thẻ tháng của tôi
+                            <i class="bi bi-card-list"></i>Thẻ tháng của tôi
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" id="booking-tab" data-bs-toggle="tab" href="#booking" role="tab">
-                            <i class="bi bi-plus-circle me-2"></i>Đặt chỗ mới
+                            <i class="bi bi-plus-circle"></i>Đặt chỗ mới
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" id="monthly-tab" data-bs-toggle="tab" href="#monthly" role="tab">
-                            <i class="bi bi-calendar-plus me-2"></i>Đăng ký thẻ tháng
+                            <i class="bi bi-calendar-plus"></i>Đăng ký thẻ tháng
                         </a>
                     </li>
                 </ul>
@@ -75,23 +153,25 @@
                 <!-- Lịch sử đặt vé -->
                 <div class="tab-pane fade show active" id="history" role="tabpanel">
                     <div class="card">
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <h5 class="card-title mb-4">Lịch sử đặt vé</h5>
                             <div class="table-responsive">
-                                <table class="table table-hover">
+                                <table class="table">
                                     <thead>
                                         <tr>
                                             <th>Mã vé</th>
                                             <th>Biển số</th>
                                             <th>Thời gian</th>
                                             <th>Trạng thái</th>
-                                            <th>Thao tác</th>
+                                            <th class="text-end">Thao tác</th>
                                         </tr>
                                     </thead>
                                     <tbody id="bookingHistoryBody">
-                                        <!-- Sẽ được load bằng JS -->
                                         <tr>
-                                            <td colspan="5" class="text-center py-4 text-muted">Đang tải dữ liệu...</td>
+                                            <td colspan="5" class="text-center py-5 text-muted">
+                                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                                Đang tải dữ liệu...
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -103,24 +183,32 @@
                 <!-- Thẻ tháng -->
                 <div class="tab-pane fade" id="passes" role="tabpanel">
                     <div class="card">
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <h5 class="card-title mb-4">Thẻ tháng của tôi</h5>
                             <div th:if="${#lists.isEmpty(monthlyPasses)}" class="text-center py-5">
-                                <i class="bi bi-card-text text-muted" style="font-size: 48px;"></i>
-                                <p class="mt-3 text-muted">Bạn chưa có thẻ tháng nào.</p>
-                                <button class="btn btn-primary btn-sm" onclick="document.getElementById('monthly-tab').click()">Đăng ký ngay</button>
+                                <div class="mb-3">
+                                    <i class="bi bi-card-text text-muted" style="font-size: 64px; opacity: 0.3;"></i>
+                                </div>
+                                <p class="text-muted fw-bold">Bạn chưa có thẻ tháng nào.</p>
+                                <button class="btn btn-primary mt-2" onclick="document.getElementById('monthly-tab').click()">Đăng ký ngay</button>
                             </div>
                             <div th:unless="${#lists.isEmpty(monthlyPasses)}" class="row">
-                                <div th:each="pass : ${monthlyPasses}" class="col-md-6 mb-3">
-                                    <div class="card border shadow-sm">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <h6 class="fw-bold mb-0" th:text="${pass.paymentCode}"></h6>
+                                <div th:each="pass : ${monthlyPasses}" class="col-md-6 mb-4">
+                                    <div class="card h-100" style="border-radius: 20px;">
+                                        <div class="card-body p-4">
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <h6 class="fw-800 mb-0 font-mono" th:text="${pass.paymentCode}"></h6>
                                                 <span th:class="'status-badge status-' + ${pass.status.toLowerCase()}" th:text="${pass.status}"></span>
                                             </div>
-                                            <p class="small text-muted mb-1">Biển số: <span class="text-dark fw-medium" th:text="${pass.licensePlate}"></span></p>
-                                            <p class="small text-muted mb-3">Hết hạn: <span class="text-dark fw-medium" th:text="${pass.endDate}"></span></p>
-                                            <a th:href="@{'/the-thang/' + ${pass.id}}" class="btn btn-outline-primary btn-sm w-100">Xem chi tiết / QR</a>
+                                            <div class="mb-4">
+                                                <div class="small text-muted mb-1 font-mono text-uppercase" style="letter-spacing: 1px;">Biển số xe</div>
+                                                <div class="fw-800 fs-5" th:text="${pass.licensePlate}"></div>
+                                            </div>
+                                            <div class="mb-4">
+                                                <div class="small text-muted mb-1 font-mono text-uppercase" style="letter-spacing: 1px;">Ngày hết hạn</div>
+                                                <div class="fw-700" th:text="${pass.endDate}"></div>
+                                            </div>
+                                            <a th:href="@{'/the-thang/' + ${pass.id}}" class="btn btn-outline-primary w-100">Xem chi tiết / QR</a>
                                         </div>
                                     </div>
                                 </div>
@@ -132,10 +220,10 @@
                 <!-- Đặt chỗ mới -->
                 <div class="tab-pane fade" id="booking" role="tabpanel">
                     <div class="card">
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <h5 class="card-title mb-4">Đặt chỗ trước</h5>
                             <form id="preBookingForm">
-                                <div class="row mb-3">
+                                <div class="row g-4 mb-4">
                                     <div class="col-md-6">
                                         <label class="form-label">Ngày đặt</label>
                                         <input type="date" id="bookingDate" class="form-control" required>
@@ -148,7 +236,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="row mb-3">
+                                <div class="row g-4 mb-4">
                                     <div class="col-md-6">
                                         <label class="form-label">Giờ vào</label>
                                         <input type="time" id="startTime" class="form-control" required>
@@ -160,12 +248,15 @@
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label">Chọn vị trí đỗ (tuỳ chọn)</label>
-                                    <div id="slotMap" class="p-3 border rounded bg-light">
-                                        <div class="text-center py-3 text-muted">Đang tải sơ đồ bãi xe...</div>
+                                    <div id="slotMap" class="p-4 border rounded-4 bg-light">
+                                        <div class="text-center py-4 text-muted">
+                                            <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                                            Đang tải sơ đồ bãi xe...
+                                        </div>
                                     </div>
                                     <input type="hidden" id="selectedSlotId">
                                 </div>
-                                <button type="submit" class="btn btn-primary w-100 py-2">Xác nhận đặt chỗ</button>
+                                <button type="submit" class="btn btn-primary w-100 py-3 mt-2">Xác nhận đặt chỗ</button>
                             </form>
                         </div>
                     </div>
@@ -174,14 +265,14 @@
                 <!-- Đăng ký thẻ tháng -->
                 <div class="tab-pane fade" id="monthly" role="tabpanel">
                     <div class="card">
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <h5 class="card-title mb-4">Đăng ký thẻ tháng mới</h5>
                             <form th:action="@{/dang-ky-the-thang}" method="post">
-                                <div class="mb-3">
+                                <div class="mb-4">
                                     <label class="form-label">Họ tên chủ xe</label>
                                     <input type="text" name="ownerName" class="form-control" th:value="${currentUser.username}" required>
                                 </div>
-                                <div class="row mb-3">
+                                <div class="row g-4 mb-4">
                                     <div class="col-md-6">
                                         <label class="form-label">Biển số xe</label>
                                         <input type="text" name="licensePlate" class="form-control" placeholder="51A-12345" required style="text-transform:uppercase">
@@ -194,7 +285,7 @@
                                         </select>
                                     </div>
                                 </div>
-                                <div class="row mb-3">
+                                <div class="row g-4 mb-4">
                                     <div class="col-md-6">
                                         <label class="form-label">Ngày bắt đầu</label>
                                         <input type="date" name="startDate" class="form-control" th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" required>
@@ -211,9 +302,9 @@
                                 </div>
                                 <div class="mb-4">
                                     <label class="form-label">Ghi chú (tuỳ chọn)</label>
-                                    <textarea name="note" class="form-control" rows="2"></textarea>
+                                    <textarea name="note" class="form-control" rows="3" placeholder="Nhập ghi chú nếu có..."></textarea>
                                 </div>
-                                <button type="submit" class="btn btn-primary w-100 py-2">Đăng ký & Thanh toán</button>
+                                <button type="submit" class="btn btn-primary w-100 py-3 mt-2">Đăng ký & Thanh toán</button>
                             </form>
                         </div>
                     </div>
@@ -226,24 +317,28 @@
 
 <!-- Modal Thanh toán -->
 <div class="modal fade" id="paymentModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Thanh toán đặt chỗ</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center">
-                <p>Vui lòng quét mã QR bên dưới để thanh toán</p>
-                <img id="paymentQrImg" src="" alt="QR Thanh toán" class="img-fluid mb-3" style="max-width: 250px;">
-                <div class="alert alert-info">
-                    <small>Nội dung chuyển khoản: <strong id="paymentCodeText"></strong></small><br>
-                    <small>Số tiền: <strong id="paymentAmountText"></strong></small>
+                <p class="mb-4 fw-600">Vui lòng quét mã QR bên dưới để thanh toán</p>
+                <div class="p-3 bg-white border rounded-4 d-inline-block mb-4">
+                    <img id="paymentQrImg" src="" alt="QR Thanh toán" class="img-fluid" style="max-width: 220px;">
                 </div>
-                <p class="text-muted small">Hệ thống sẽ tự động xác nhận sau khi nhận được tiền.</p>
+                <div class="alert alert-light border-2 border-dashed p-3 mb-4" style="border-style: dashed !important; border-radius: 16px;">
+                    <div class="small text-muted mb-1 font-mono text-uppercase">Nội dung chuyển khoản</div>
+                    <div class="fw-800 fs-5 mb-2 font-mono" id="paymentCodeText"></div>
+                    <div class="small text-muted mb-1 font-mono text-uppercase">Số tiền</div>
+                    <div class="fw-800 fs-4 text-primary font-mono" id="paymentAmountText"></div>
+                </div>
+                <p class="text-muted small fw-600">Hệ thống sẽ tự động xác nhận sau khi nhận được tiền.</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <a id="viewDetailBtn" href="#" class="btn btn-primary">Xem chi tiết vé</a>
+                <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal" style="border-radius: 12px; font-weight: 700;">Đóng</button>
+                <a id="viewDetailBtn" href="#" class="btn btn-primary px-4">Xem chi tiết vé</a>
             </div>
         </div>
     </div>
@@ -263,25 +358,25 @@
             if (result.success && result.data.length > 0) {
                 tbody.innerHTML = result.data.map(b => `
                     <tr>
-                        <td><small class="fw-bold">${b.paymentCode}</small></td>
-                        <td>${b.licensePlate}</td>
+                        <td><small class="fw-800 font-mono text-primary">${b.paymentCode}</small></td>
+                        <td class="font-mono fw-700">${b.licensePlate}</td>
                         <td>
-                            <div style="font-size: 12px;">${b.bookingDate || ''}</div>
-                            <div style="font-size: 11px;" class="text-muted">${b.startTime || ''} - ${b.endTime || ''}</div>
+                            <div class="fw-700" style="font-size: 13px;">${b.bookingDate || ''}</div>
+                            <div style="font-size: 11px;" class="text-muted font-mono fw-700">${b.startTime || ''} - ${b.endTime || ''}</div>
                         </td>
                         <td><span class="status-badge status-${b.status.toLowerCase()}">${b.status}</span></td>
-                        <td>
-                            <a href="/ve/${b.id}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+                        <td class="text-end">
+                            <a href="/ve/${b.id}" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-eye"></i></a>
                             ${b.status === 'PENDING' ? `<button onclick="cancelBooking(${b.id})" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-circle"></i></button>` : ''}
                         </td>
                     </tr>
                 `).join('');
             } else {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-muted">Bạn chưa có giao dịch nào.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted fw-bold">Bạn chưa có giao dịch nào.</td></tr>';
             }
         } catch (e) {
             console.error(e);
-            document.getElementById('bookingHistoryBody').innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Lỗi tải dữ liệu.</td></tr>';
+            document.getElementById('bookingHistoryBody').innerHTML = '<tr><td colspan="5" class="text-center py-5 text-danger fw-bold">Lỗi tải dữ liệu.</td></tr>';
         }
     }
 
