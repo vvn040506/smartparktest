@@ -10,8 +10,6 @@ import com.smartpark.service.BookingService;
 import com.smartpark.service.EmailService;
 import com.smartpark.service.MonthlyPassService;
 import com.smartpark.service.PricingService;
-import com.smartpark.service.pricing.PricingFactory;
-import com.smartpark.service.pricing.PricingStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
@@ -35,18 +33,15 @@ public class BookingServiceImpl implements BookingService {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final BookingRepository repo;
-    private final PricingFactory pricingFactory;
     private final PricingService pricingService;
     private final MonthlyPassService monthlyPassService;
     private final EmailService emailService;
 
     public BookingServiceImpl(BookingRepository repo, 
-                             PricingFactory pricingFactory,
                              PricingService pricingService,
                              MonthlyPassService monthlyPassService,
                              EmailService emailService) {
         this.repo = repo;
-        this.pricingFactory = pricingFactory;
         this.pricingService = pricingService;
         this.monthlyPassService = monthlyPassService;
         this.emailService = emailService;
@@ -63,16 +58,18 @@ public class BookingServiceImpl implements BookingService {
             throw new IllegalArgumentException("Ngày check-in không được trong quá khứ");
         }
         
-        PricingStrategy pricing = pricingFactory.getStrategy(vehicleType);
+        // Kiểm tra user có thẻ tháng hợp lệ không (dựa trên biển số xe cho walk-in)
+        Optional<MonthlyPass> activePass = monthlyPassService.findActivePass(plate.toUpperCase().trim());
+        boolean hasMonthlyPass = activePass.isPresent();
 
         Booking b = new Booking();
-        b.setBookingType("walk_in");
+        b.setBookingType(hasMonthlyPass ? "walk_in_with_pass" : "walk_in");
         b.setCustomerName(customerName);
         b.setLicensePlate(plate.toUpperCase().trim());
         b.setVehicleType(vehicleType);
         b.setCheckIn(checkIn);
         b.setCheckOut(checkOut);
-        b.setAmountDue(pricing.calculate(checkIn, checkOut));
+        b.setAmountDue(pricingService.calculateWalkInPrice(checkIn, checkOut, vehicleType, hasMonthlyPass));
         b.setPaymentCode(generatePaymentCode());
         b.setStatus("CONFIRMED");
         
@@ -95,10 +92,8 @@ public class BookingServiceImpl implements BookingService {
             );
         }
 
-        // Kiểm tra user có thẻ tháng hợp lệ không
-        Optional<MonthlyPass> activePass = monthlyPassService.findActivePass(
-            user != null ? user.getId().toString() : request.licensePlate()
-        );
+        // Kiểm tra user có thẻ tháng hợp lệ không (dựa trên biển số xe)
+        Optional<MonthlyPass> activePass = monthlyPassService.findActivePass(request.licensePlate());
         boolean hasMonthlyPass = activePass.isPresent();
 
         // Tính giá

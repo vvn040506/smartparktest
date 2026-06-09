@@ -19,14 +19,14 @@ import java.util.regex.Pattern;
 
 /**
  * Giá thẻ tháng:
- *   Xe máy : 200.000 đ / tháng
- *   Ô tô   : 500.000 đ / tháng
+ *   Xe máy : 100.000 đ / tháng
+ *   Ô tô   : 200.000 đ / tháng
  */
 @Service
 public class MonthlyPassServiceImpl implements MonthlyPassService {
 
-    private static final long MOTO_PRICE_PER_MONTH = 200_000L;
-    private static final long CAR_PRICE_PER_MONTH  = 500_000L;
+    private static final long MOTO_PRICE_PER_MONTH = 100_000L;
+    private static final long CAR_PRICE_PER_MONTH  = 200_000L;
 
     // Fix #1: Dùng SecureRandom thay vì Random để tăng entropy
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
