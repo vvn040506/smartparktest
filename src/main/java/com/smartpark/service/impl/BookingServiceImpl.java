@@ -1,6 +1,7 @@
 package com.smartpark.service.impl;
 
 import com.smartpark.dto.request.PreBookingRequest;
+import com.smartpark.exception.SlotAlreadyOccupiedException;
 import com.smartpark.model.Booking;
 import com.smartpark.model.MonthlyPass;
 import com.smartpark.model.User;
@@ -81,7 +82,19 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public Booking createPreBooking(User user, PreBookingRequest request) {
+        // ── THÊM: Kiểm tra ô đỗ đã có booking PENDING/PAID chưa ──
+        boolean slotTaken = repo.existsBySlotIdAndStatusIn(
+            request.slotId(),
+            List.of("PENDING", "PAID")
+        );
+        if (slotTaken) {
+            throw new SlotAlreadyOccupiedException(
+                "Ô đỗ " + request.slotId() + " vừa được người khác đặt. Vui lòng chọn ô khác."
+            );
+        }
+
         // Kiểm tra user có thẻ tháng hợp lệ không
         Optional<MonthlyPass> activePass = monthlyPassService.findActivePass(
             user != null ? user.getId().toString() : request.licensePlate()
@@ -142,7 +155,7 @@ public class BookingServiceImpl implements BookingService {
             return false;
         }
 
-        Optional<Booking> found = repo.findByPaymentCodeAndStatusNot(paymentCode, "PAID");
+        Optional<Booking> found = repo.findByPaymentCodeAndStatus(paymentCode, "PENDING");
 
         if (found.isEmpty()) {
             log.warn("No pending booking found for payment code: {}", paymentCode);

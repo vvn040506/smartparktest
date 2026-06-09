@@ -402,21 +402,29 @@ h1,h2,h3,h4,h5,h6,.topbar-title,.login-title,.modal-title,.card-title,.brand-nam
         
         try {
             const res = await fetch(`/api/slots/zone/${zone}`);
-            const slots = await res.json();
+            const result = await res.json();
             
-            let html = '<div class="slot-grid">';
-            slots.forEach(s => {
-                let statusClass = 'slot-empty';
-                if (s.occupied) statusClass = 'slot-filled';
-                else if (s.reserved) statusClass = 'slot-reserved';
-                
-                html += `<div class="slot-item ${statusClass}" 
-                             onclick="selectSlot('${s.id}', ${s.occupied || s.reserved})" 
-                             id="slot-${s.id}" title="${s.id}">${s.id}</div>`;
-            });
-            html += '</div>';
-            mapDiv.innerHTML = html;
-        } catch (e) { console.error(e); }
+            if (result.success && result.data) {
+                const slots = result.data;
+                let html = '<div class="slot-grid">';
+                slots.forEach(s => {
+                    let statusClass = 'slot-empty';
+                    if (s.occupied) statusClass = 'slot-filled';
+                    else if (s.reserved) statusClass = 'slot-reserved';
+                    
+                    html += `<div class="slot-item ${statusClass}" 
+                                 onclick="selectSlot('${s.id}', ${s.occupied || s.reserved})" 
+                                 id="slot-${s.id}" title="${s.id}">${s.id}</div>`;
+                });
+                html += '</div>';
+                mapDiv.innerHTML = html;
+            } else {
+                mapDiv.innerHTML = '<div class="text-center py-4 text-muted">Không có dữ liệu ô đỗ.</div>';
+            }
+        } catch (e) { 
+            console.error(e);
+            mapDiv.innerHTML = '<div class="text-center py-4 text-danger">Lỗi tải sơ đồ bãi xe.</div>';
+        }
     }
 
     function selectSlot(id, isTaken) {
