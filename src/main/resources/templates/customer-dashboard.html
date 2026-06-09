@@ -400,11 +400,25 @@ h1,h2,h3,h4,h5,h6,.topbar-title,.login-title,.modal-title,.card-title,.brand-nam
         const zone = type === 'o_to' ? 'car' : 'motorbike';
         const mapDiv = document.getElementById('slotMap');
         
+        // Show loading state
+        mapDiv.innerHTML = `
+            <div class="text-center py-4 text-muted">
+                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                Đang tải sơ đồ bãi xe...
+            </div>
+        `;
+        
         try {
             const res = await fetch(`/api/slots/zone/${zone}`);
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
             const result = await res.json();
             
-            if (result.success && result.data) {
+            // Log result for debugging
+            console.log('Slots data:', result);
+            
+            if (result.success && result.data && result.data.length > 0) {
                 const slots = result.data;
                 let html = '<div class="slot-grid">';
                 slots.forEach(s => {
@@ -419,11 +433,11 @@ h1,h2,h3,h4,h5,h6,.topbar-title,.login-title,.modal-title,.card-title,.brand-nam
                 html += '</div>';
                 mapDiv.innerHTML = html;
             } else {
-                mapDiv.innerHTML = '<div class="text-center py-4 text-muted">Không có dữ liệu ô đỗ.</div>';
+                mapDiv.innerHTML = '<div class="text-center py-4 text-muted">Không có dữ liệu ô đỗ cho khu vực này.</div>';
             }
         } catch (e) { 
-            console.error(e);
-            mapDiv.innerHTML = '<div class="text-center py-4 text-danger">Lỗi tải sơ đồ bãi xe.</div>';
+            console.error('Error loading slots:', e);
+            mapDiv.innerHTML = `<div class="text-center py-4 text-danger">Lỗi tải sơ đồ bãi xe: ${e.message}</div>`;
         }
     }
 

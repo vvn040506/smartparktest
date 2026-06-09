@@ -82,23 +82,23 @@ public class ApiController {
     // ── SLOTS ─────────────────────────────────────────────────────────────────
 
     @GetMapping("/slots")
-    public ApiResponse<List<ParkingSlot>> getAllSlots() {
-        return ApiResponse.success(parkingService.getAllSlots());
+    public ResponseEntity<ApiResponse<List<ParkingSlot>>> getAllSlots() {
+        return ResponseEntity.ok(ApiResponse.success(parkingService.getAllSlots()));
     }
 
     @GetMapping("/slots/zone/{zone}")
-    public ApiResponse<List<ParkingSlot>> getByZone(@PathVariable String zone) {
-        return ApiResponse.success(parkingService.getSlotsByZone(zone));
+    public ResponseEntity<ApiResponse<List<ParkingSlot>>> getByZone(@PathVariable String zone) {
+        return ResponseEntity.ok(ApiResponse.success(parkingService.getSlotsByZone(zone)));
     }
 
     @GetMapping("/slots/stats")
-    public ApiResponse<?> getStats() {
-        return ApiResponse.success(parkingService.getStats());
+    public ResponseEntity<ApiResponse<?>> getStats() {
+        return ResponseEntity.ok(ApiResponse.success(parkingService.getStats()));
     }
 
     @GetMapping("/slots/search")
-    public ApiResponse<List<ParkingSlot>> search(@RequestParam String plate) {
-        return ApiResponse.success(parkingService.searchByPlate(plate));
+    public ResponseEntity<ApiResponse<List<ParkingSlot>>> search(@RequestParam String plate) {
+        return ResponseEntity.ok(ApiResponse.success(parkingService.searchByPlate(plate)));
     }
 
     /**
