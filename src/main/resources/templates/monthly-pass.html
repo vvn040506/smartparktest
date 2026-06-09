@@ -112,14 +112,14 @@ h1,h2,h3,h4,h5,h6,.topbar-title,.login-title,.modal-title,.card-title,.brand-nam
                 <div class="col-12">
                     <div class="price-card moto">
                         <div class="price-label">🏍️ Gói Xe Máy</div>
-                        <div class="price-value">200.000 đ</div>
+                        <div class="price-value">100.000 đ</div>
                         <div class="price-unit">mỗi tháng</div>
                     </div>
                 </div>
                 <div class="col-12">
                     <div class="price-card car">
                         <div class="price-label">🚗 Gói Ô Tô</div>
-                        <div class="price-value">500.000 đ</div>
+                        <div class="price-value">200.000 đ</div>
                         <div class="price-unit">mỗi tháng</div>
                     </div>
                 </div>
@@ -196,7 +196,7 @@ h1,h2,h3,h4,h5,h6,.topbar-title,.login-title,.modal-title,.card-title,.brand-nam
                             </div>
                             <div class="summary-item">
                                 <span class="fs-5 fw-800">Tổng thanh toán:</span>
-                                <span id="total-price" class="fs-5 fw-800 font-mono text-primary">200.000 đ</span>
+                                <span id="total-price" class="fs-5 fw-800 font-mono text-primary">100.000 đ</span>
                             </div>
                         </div>
 
@@ -224,7 +224,7 @@ h1,h2,h3,h4,h5,h6,.topbar-title,.login-title,.modal-title,.card-title,.brand-nam
     function updatePrice() {
         const type   = document.getElementById('vehicleType').value;
         const months = parseInt(document.getElementById('months').value);
-        const basePrice = type === 'o_to' ? 500000 : 200000;
+        const basePrice = type === 'o_to' ? 200000 : 100000;
         
         // Tính giảm giá
         let discount = 0;
