@@ -412,10 +412,6 @@ public class ApiController {
 
         bookingService.cancel(bookingId);
 
-        if (booking.getSlotId() != null) {
-            parkingService.checkout(booking.getSlotId());
-        }
-
         return ResponseEntity.ok(ApiResponse.success("Đã huỷ booking thành công", null));
     }
 }

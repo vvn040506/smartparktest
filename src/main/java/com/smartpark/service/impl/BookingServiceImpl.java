@@ -9,6 +9,7 @@ import com.smartpark.repository.BookingRepository;
 import com.smartpark.service.BookingService;
 import com.smartpark.service.EmailService;
 import com.smartpark.service.MonthlyPassService;
+import com.smartpark.service.ParkingService;
 import com.smartpark.service.PricingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
@@ -36,15 +37,18 @@ public class BookingServiceImpl implements BookingService {
     private final PricingService pricingService;
     private final MonthlyPassService monthlyPassService;
     private final EmailService emailService;
+    private final ParkingService parkingService;
 
     public BookingServiceImpl(BookingRepository repo, 
                              PricingService pricingService,
                              MonthlyPassService monthlyPassService,
-                             EmailService emailService) {
+                             EmailService emailService,
+                             ParkingService parkingService) {
         this.repo = repo;
         this.pricingService = pricingService;
         this.monthlyPassService = monthlyPassService;
         this.emailService = emailService;
+        this.parkingService = parkingService;
     }
 
     @Override
@@ -124,7 +128,15 @@ public class BookingServiceImpl implements BookingService {
         booking.setPaymentCode(generatePaymentCode());
         booking.setStatus("PENDING");
 
-        return repo.save(booking);
+        Booking saved = repo.save(booking);
+
+        // Đồng bộ sang sơ đồ bãi xe để staff thấy ô đã được đặt trước ngay lập tức.
+        // Trước đây createPreBooking chỉ lưu slotId trong Booking nên ParkingSlot vẫn trống.
+        if (request.slotId() != null && !request.slotId().isBlank()) {
+            parkingService.reserveSlot(request.slotId(), request.licensePlate());
+        }
+
+        return saved;
     }
 
     @Override
@@ -266,6 +278,10 @@ public class BookingServiceImpl implements BookingService {
         repo.findById(bookingId).ifPresent(b -> {
             b.setStatus("CANCELLED");
             repo.save(b);
+
+            if (b.getSlotId() != null && !b.getSlotId().isBlank()) {
+                parkingService.releaseSlot(b.getSlotId());
+            }
         });
     }
 }

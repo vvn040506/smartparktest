@@ -30,6 +30,8 @@ public interface ParkingService {
 
     void reserveSlot(String slotId, String licensePlate);
 
+    void releaseSlot(String slotId);
+
     List<ParkingSlot> getAvailableSlots(String vehicleType);
 
     void resetAllSlots();
