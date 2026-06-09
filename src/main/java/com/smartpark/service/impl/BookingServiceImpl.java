@@ -85,10 +85,11 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public Booking createPreBooking(User user, PreBookingRequest request) {
-        // ── THÊM: Kiểm tra ô đỗ đã có booking PENDING/PAID chưa ──
+        // Chỉ booking đã thanh toán mới giữ ô trên sơ đồ bãi xe.
+        // Booking PENDING chưa được phép chiếm/đổi trạng thái ô đỗ.
         boolean slotTaken = repo.existsBySlotIdAndStatusIn(
             request.slotId(),
-            List.of("PENDING", "PAID")
+            List.of("PAID")
         );
         if (slotTaken) {
             throw new SlotAlreadyOccupiedException(
@@ -128,15 +129,7 @@ public class BookingServiceImpl implements BookingService {
         booking.setPaymentCode(generatePaymentCode());
         booking.setStatus("PENDING");
 
-        Booking saved = repo.save(booking);
-
-        // Đồng bộ sang sơ đồ bãi xe để staff thấy ô đã được đặt trước ngay lập tức.
-        // Trước đây createPreBooking chỉ lưu slotId trong Booking nên ParkingSlot vẫn trống.
-        if (request.slotId() != null && !request.slotId().isBlank()) {
-            parkingService.reserveSlot(request.slotId(), request.licensePlate());
-        }
-
-        return saved;
+        return repo.save(booking);
     }
 
     @Override
@@ -179,6 +172,11 @@ public class BookingServiceImpl implements BookingService {
         b.setPaidAt(LocalDateTime.now());
         b.setBankRef(bankRef);
         repo.save(b);
+
+        // Chỉ sau khi thanh toán thành công mới đánh dấu ô là đã đặt trên sơ đồ bãi xe.
+        if (b.getSlotId() != null && !b.getSlotId().isBlank()) {
+            parkingService.reserveSlot(b.getSlotId(), b.getLicensePlate());
+        }
 
         if (b.getEmail() != null && !b.getEmail().isBlank()) {
             try {
