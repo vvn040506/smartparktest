@@ -13,6 +13,7 @@ import com.smartpark.service.ParkingService;
 import com.smartpark.service.PricingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -281,5 +282,31 @@ public class BookingServiceImpl implements BookingService {
                 parkingService.releaseSlot(b.getSlotId());
             }
         });
+    }
+
+    /**
+     * Tự động huỷ mọi booking còn PENDING quá 5 phút.
+     * Chạy mỗi 1 phút để đảm bảo booking quá hạn được xử lý kịp thời.
+     */
+    @Scheduled(fixedRate = 60000)
+    @Transactional
+    public void autoCancelExpiredPendingBookings() {
+        LocalDateTime expiredBefore = LocalDateTime.now().minusMinutes(5);
+        List<Booking> expiredPendingBookings = repo.findByStatusAndCreatedAtBefore("PENDING", expiredBefore);
+
+        if (expiredPendingBookings.isEmpty()) {
+            return;
+        }
+
+        for (Booking booking : expiredPendingBookings) {
+            booking.setStatus("CANCELLED");
+
+            if (booking.getSlotId() != null && !booking.getSlotId().isBlank()) {
+                parkingService.releaseSlot(booking.getSlotId());
+            }
+        }
+
+        repo.saveAll(expiredPendingBookings);
+        log.info("[AUTO-CANCEL] Cancelled {} PENDING booking(s) older than 5 minutes", expiredPendingBookings.size());
     }
 }
