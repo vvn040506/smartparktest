@@ -228,9 +228,29 @@ public class MonthlyPassServiceImpl implements MonthlyPassService {
     // ── AUTO-EXPIRE ──────────────────────────────────────────────────────────
 
     /**
+     * Tự động huỷ các thẻ tháng PENDING quá 5 phút.
+     * Chạy mỗi 1 phút.
+     */
+    @Scheduled(fixedRate = 60000)
+    @Transactional
+    public void autoCancelExpiredPendingPasses() {
+        LocalDateTime expiredBefore = LocalDateTime.now().minusMinutes(5);
+        List<MonthlyPass> expiredPending = repo.findByStatusAndCreatedAtBefore("PENDING", expiredBefore);
+
+        if (!expiredPending.isEmpty()) {
+            for (MonthlyPass pass : expiredPending) {
+                pass.setStatus("CANCELLED");
+            }
+            repo.saveAll(expiredPending);
+            System.out.printf("[AUTO-CANCEL] ✅ Cancelled %d PENDING monthly pass(es)%n", expiredPending.size());
+        }
+    }
+
+    /**
      * Fix #11: Auto-expire thẻ hết hạn mỗi ngày lúc 00:05
      */
     @Scheduled(cron = "0 5 0 * * *")
+    @Transactional
     public void autoExpireMonthlyPasses() {
         LocalDate today = LocalDate.now();
         List<MonthlyPass> allPasses = repo.findAll();
