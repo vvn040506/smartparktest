@@ -224,11 +224,15 @@ h1,h2,h3,h4,h5,h6,.topbar-title,.login-title,.modal-title,.card-title,.brand-nam
                             <h5 class="card-title mb-4">Đặt chỗ trước</h5>
                             <form id="preBookingForm">
                                 <div class="row g-4 mb-4">
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <label class="form-label">Ngày đặt</label>
                                         <input type="date" id="bookingDate" class="form-control" required>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Biển số xe</label>
+                                        <input type="text" id="licensePlate" class="form-control" placeholder="51A-12345" required style="text-transform:uppercase">
+                                    </div>
+                                    <div class="col-md-4">
                                         <label class="form-label">Loại xe</label>
                                         <select id="vehicleType" class="form-select" onchange="loadSlots()">
                                             <option value="xe_may">🏍️ Xe máy</option>
@@ -463,6 +467,7 @@ h1,h2,h3,h4,h5,h6,.topbar-title,.login-title,.modal-title,.card-title,.brand-nam
         
         const data = {
             bookingDate: document.getElementById('bookingDate').value,
+            licensePlate: document.getElementById('licensePlate').value,
             startTime: document.getElementById('startTime').value,
             endTime: document.getElementById('endTime').value,
             vehicleType: document.getElementById('vehicleType').value,
