@@ -52,8 +52,6 @@ public class MonthlyPassServiceImpl implements MonthlyPassService {
     @Override
     public MonthlyPass create(CreateMonthlyPassRequest req, com.smartpark.model.User user) {
         int months = req.resolvedMonths();
-        long pricePerMonth = "o_to".equals(req.vehicleType())
-                ? CAR_PRICE_PER_MONTH : MOTO_PRICE_PER_MONTH;
 
         MonthlyPass pass = new MonthlyPass();
         pass.setOwnerName(req.ownerName().trim());
@@ -62,7 +60,7 @@ public class MonthlyPassServiceImpl implements MonthlyPassService {
         pass.setVehicleType(req.vehicleType());
         pass.setStartDate(req.startDate());
         pass.setEndDate(req.startDate().plusMonths(months).minusDays(1));
-        pass.setAmountDue(pricePerMonth * months);
+        pass.setAmountDue(calculateAmountDue(req.vehicleType(), months));
         // Fix #2: generatePaymentCode có retry khi trùng
         pass.setPaymentCode(generateUniquePaymentCode());
         pass.setNote(req.note());
@@ -206,9 +204,7 @@ public class MonthlyPassServiceImpl implements MonthlyPassService {
                 ? LocalDate.now() : pass.getEndDate();
         pass.setEndDate(base.plusMonths(months));
 
-        long pricePerMonth = "o_to".equals(pass.getVehicleType())
-                ? CAR_PRICE_PER_MONTH : MOTO_PRICE_PER_MONTH;
-        pass.setAmountDue(pricePerMonth * months);
+        pass.setAmountDue(calculateAmountDue(pass.getVehicleType(), months));
         // Fix #2: dùng generateUniquePaymentCode khi gia hạn
         pass.setPaymentCode(generateUniquePaymentCode());
         pass.setStatus("PENDING");
@@ -299,5 +295,21 @@ public class MonthlyPassServiceImpl implements MonthlyPassService {
             sb.append(chars.charAt(SECURE_RANDOM.nextInt(chars.length())));
         }
         return sb.toString();
+    }
+
+    /**
+     * Tính tổng tiền cần thanh toán dựa trên loại xe, số tháng và ưu đãi giảm giá.
+     * Giảm giá: 3 tháng (5%), 6 tháng (10%), 12 tháng (20%)
+     */
+    private long calculateAmountDue(String vehicleType, int months) {
+        long pricePerMonth = "o_to".equals(vehicleType)
+                ? CAR_PRICE_PER_MONTH : MOTO_PRICE_PER_MONTH;
+        
+        double discount = 0;
+        if (months >= 12) discount = 0.20;
+        else if (months >= 6) discount = 0.10;
+        else if (months >= 3) discount = 0.05;
+        
+        return (long) (pricePerMonth * months * (1 - discount));
     }
 }
