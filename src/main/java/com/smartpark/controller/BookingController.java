@@ -65,13 +65,13 @@ public class BookingController {
         return "staff-scan-qr";
     }
 
-    // Trang đặt vé (booking form)
+    // UI đặt vé riêng đã bỏ; đặt trước nằm trong Customer Dashboard
     @GetMapping("/booking")
     public String booking(HttpSession session) {
         if (session.getAttribute("currentUser") != null) {
             return "redirect:/customer/dashboard";
         }
-        return "index";
+        return "redirect:/login";
     }
 
 

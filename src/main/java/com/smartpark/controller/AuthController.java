@@ -88,7 +88,7 @@ public class AuthController {
             SecurityContextHolder.setContext(context);
             session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
             
-            return "redirect:/booking";
+            return "redirect:/customer/dashboard";
         }
         
         model.addAttribute("error", "Sai tên đăng nhập hoặc mật khẩu");
