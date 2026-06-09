@@ -13,6 +13,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Optional<Booking> findByPaymentCode(String paymentCode);
     boolean existsBySlotIdAndStatusIn(String slotId, List<String> statuses);
     List<Booking> findByStatusAndCreatedAtBefore(String status, LocalDateTime createdAt);
+    List<Booking> findAllByStatus(String status);
     
     /** Tìm booking theo user */
     List<Booking> findByUserIdOrderByCreatedAtDesc(Long userId);

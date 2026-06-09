@@ -285,28 +285,51 @@ public class BookingServiceImpl implements BookingService {
     }
 
     /**
-     * Tự động huỷ mọi booking còn PENDING quá 5 phút.
-     * Chạy mỗi 1 phút để đảm bảo booking quá hạn được xử lý kịp thời.
+     * Tự động huỷ các booking quá hạn:
+     * 1. PENDING quá 5 phút kể từ khi tạo.
+     * 2. PAID (đặt trước) nhưng quá giờ bắt đầu 30 phút mà chưa vào bãi.
      */
     @Scheduled(fixedRate = 60000)
     @Transactional
-    public void autoCancelExpiredPendingBookings() {
-        LocalDateTime expiredBefore = LocalDateTime.now().minusMinutes(5);
-        List<Booking> expiredPendingBookings = repo.findByStatusAndCreatedAtBefore("PENDING", expiredBefore);
-
-        if (expiredPendingBookings.isEmpty()) {
-            return;
+    public void autoCancelExpiredBookings() {
+        // 1. Xử lý PENDING quá 5 phút
+        LocalDateTime pendingExpiredBefore = LocalDateTime.now().minusMinutes(5);
+        List<Booking> expiredPending = repo.findByStatusAndCreatedAtBefore("PENDING", pendingExpiredBefore);
+        
+        if (!expiredPending.isEmpty()) {
+            for (Booking b : expiredPending) {
+                b.setStatus("CANCELLED");
+                if (b.getSlotId() != null && !b.getSlotId().isBlank()) {
+                    parkingService.releaseSlot(b.getSlotId());
+                }
+            }
+            repo.saveAll(expiredPending);
+            log.info("[AUTO-CANCEL] Cancelled {} PENDING booking(s)", expiredPending.size());
         }
 
-        for (Booking booking : expiredPendingBookings) {
-            booking.setStatus("CANCELLED");
+        // 2. Xử lý PAID quá giờ bắt đầu 30 phút (chỉ áp dụng cho pre_booking)
+        // Lấy các booking PAID chưa check-in
+        List<Booking> paidBookings = repo.findAllByStatus("PAID");
+        LocalDateTime now = LocalDateTime.now();
+        int paidCancelledCount = 0;
 
-            if (booking.getSlotId() != null && !booking.getSlotId().isBlank()) {
-                parkingService.releaseSlot(booking.getSlotId());
+        for (Booking b : paidBookings) {
+            if (b.getCheckIn() == null && b.getBookingDate() != null && b.getStartTime() != null) {
+                LocalDateTime startDateTime = LocalDateTime.of(b.getBookingDate(), b.getStartTime());
+                // Nếu quá 30 phút so với giờ bắt đầu
+                if (now.isAfter(startDateTime.plusMinutes(30))) {
+                    b.setStatus("CANCELLED");
+                    if (b.getSlotId() != null && !b.getSlotId().isBlank()) {
+                        parkingService.releaseSlot(b.getSlotId());
+                    }
+                    repo.save(b);
+                    paidCancelledCount++;
+                }
             }
         }
-
-        repo.saveAll(expiredPendingBookings);
-        log.info("[AUTO-CANCEL] Cancelled {} PENDING booking(s) older than 5 minutes", expiredPendingBookings.size());
+        
+        if (paidCancelledCount > 0) {
+            log.info("[AUTO-CANCEL] Cancelled {} PAID booking(s) due to timeout", paidCancelledCount);
+        }
     }
 }
