@@ -172,12 +172,12 @@ public class QRController {
     }
 
     /**
-     * Tìm kiếm và verify theo Payment Code (SP... hoặc MP...)
+     * Tìm kiếm và verify theo Payment Code (SP..., WI... hoặc MP...)
      */
     private ResponseEntity<ApiResponse<QRVerifyResponse>> verifyByPaymentCode(String code) {
         System.out.println("Verifying by Payment Code: " + code);
         
-        if (code.startsWith("SP")) {
+        if (code.startsWith("SP") || code.startsWith("WI")) {
             // Tìm Booking
             Booking booking = bookingService.findByPaymentCode(code).orElse(null);
             if (booking == null) {

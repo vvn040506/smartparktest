@@ -4,6 +4,7 @@ import com.smartpark.model.Booking;
 import com.smartpark.model.StaffAccount;
 import com.smartpark.service.BookingService;
 import com.smartpark.service.PricingService;
+import com.smartpark.service.QRCodeService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,7 @@ public class StaffController {
 
     @Autowired private BookingService bookingService;
     @Autowired private PricingService pricingService;
+    @Autowired private QRCodeService qrCodeService;
 
     /**
      * Kiểm tra staff đã đăng nhập chưa
@@ -100,16 +102,20 @@ public class StaffController {
             // Ước tính giá
             long estimatedPrice = pricingService.estimateWalkInPrice(vehicleType);
             
+            // Tạo QR Code cho vé walk-in
+            String qrCode = qrCodeService.generateWalkInQR(booking);
+            
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Tạo vé walk-in thành công");
             response.put("data", Map.of(
                 "bookingId", booking.getId(),
-                "ticketCode", "WI" + booking.getId(),
+                "ticketCode", booking.getPaymentCode(),
                 "estimatedPrice", estimatedPrice,
                 "checkInTime", booking.getCheckIn().toString(),
                 "licensePlate", booking.getLicensePlate(),
-                "vehicleType", booking.getVehicleType()
+                "vehicleType", booking.getVehicleType(),
+                "qrCode", qrCode
             ));
             
             return ResponseEntity.ok(response);

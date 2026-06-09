@@ -137,4 +137,20 @@ public class QRCodeService {
         return qrData.startsWith("SMARTPARK_BOOKING|") || 
                qrData.startsWith("SMARTPARK_PASS|");
     }
+
+    /**
+     * Tạo QR code cho vé trực tiếp (Walk-in)
+     */
+    public String generateWalkInQR(Booking booking) throws WriterException, IOException {
+        String data = String.format(
+            "SMARTPARK_BOOKING|%d|%s|%s|%s|%s",
+            booking.getId(),
+            booking.getPaymentCode(),
+            booking.getLicensePlate(),
+            "", // Walk-in không có ngày đặt trước cố định
+            ""  // Walk-in chưa có slot cố định
+        );
+        
+        return generateQRCodeImage(data);
+    }
 }

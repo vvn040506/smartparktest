@@ -221,6 +221,12 @@ function showSuccessResult(data) {
                 <span class="info-label">Trạng thái:</span>
                 <span class="status-badge status-success">${data.status}</span>
             </div>
+            
+            <!-- Khung hiển thị giá tiền để bảo vệ thu tiền -->
+            <div id="priceTag" style="margin-top: 20px; padding: 15px; background: #f0fdf4; border: 2px solid #16a34a; border-radius: 16px; display: none;">
+                <div style="font-size: 12px; color: #16a34a; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Số tiền cần thu:</div>
+                <div id="ticketPrice" style="font-size: 28px; color: #15803d; font-weight: 800; font-family: var(--mono);">0 đ</div>
+            </div>
     `;
     
     if (data.details) {
@@ -230,11 +236,17 @@ function showSuccessResult(data) {
                     <span class="info-label">Khách hàng:</span>
                     <span class="info-value">${data.details.customerName || '-'}</span>
                 </div>
-                <div class="info-row">
-                    <span class="info-label">Loại xe:</span>
-                    <span class="info-value">${data.details.vehicleType === 'o_to' ? '🚗 Ô tô' : '🏍️ Xe máy'}</span>
-                </div>
-            `;
+            <div class="info-row">
+                <span class="info-label">Trạng thái:</span>
+                <span class="status-badge status-success">${data.status}</span>
+            </div>
+            
+            <!-- Khung hiển thị giá tiền để bảo vệ thu tiền (Chỉ hiện cho vé đặt trực tiếp) -->
+            <div id="priceTag" style="margin-top: 20px; padding: 15px; background: #f0fdf4; border: 2px solid #16a34a; border-radius: 16px; display: none;">
+                <div style="font-size: 12px; color: #16a34a; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Số tiền cần thu:</div>
+                <div id="ticketPrice" style="font-size: 28px; color: #15803d; font-weight: 800; font-family: var(--mono);">0 đ</div>
+            </div>
+    `;
             if (data.details.slotId) {
                 html += `
                     <div class="info-row">
@@ -264,6 +276,16 @@ function showSuccessResult(data) {
     `;
     
     document.getElementById('result-container').innerHTML = html;
+
+    // Hiển thị giá tiền nếu là vé đặt trực tiếp (walk-in)
+    if (data.type === 'booking' && data.details && data.details.bookingType === 'walk_in') {
+        const priceTag = document.getElementById('priceTag');
+        const ticketPrice = document.getElementById('ticketPrice');
+        if (priceTag && ticketPrice && data.details.amountDue > 0) {
+            ticketPrice.textContent = data.details.amountDue.toLocaleString('vi-VN') + ' đ';
+            priceTag.style.display = 'block';
+        }
+    }
 }
 
 function showResult(type, message) {
@@ -310,9 +332,15 @@ async function verifyManualCode() {
         });
         
         const result = await response.json();
-        if (result.success && result.data) {
-            showSuccessResult(result.data);
-        } else {
+    if (result.success && result.data) {
+        showSuccessResult(result.data);
+        
+        // Hiển thị giá tiền nếu là vé đặt trước (pre-booking)
+        if (result.data.type === 'booking' && result.data.details && result.data.details.amountDue > 0) {
+            document.getElementById('ticketPrice').textContent = result.data.details.amountDue.toLocaleString('vi-VN') + ' đ';
+            document.getElementById('priceTag').style.display = 'block';
+        }
+    } else {
             showResult('error', '❌ ' + (result.message || 'Mã không hợp lệ'));
         }
     } catch (error) {

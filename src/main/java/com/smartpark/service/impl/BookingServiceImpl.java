@@ -211,6 +211,15 @@ public class BookingServiceImpl implements BookingService {
         }
         return sb.toString();
     }
+
+    private String generateWalkInCode() {
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        StringBuilder sb = new StringBuilder("WI");
+        for (int i = 0; i < 6; i++) {
+            sb.append(chars.charAt(SECURE_RANDOM.nextInt(chars.length())));
+        }
+        return sb.toString();
+    }
     
     // ── Walk-in methods ──────────────────────────────────
     @Override
@@ -223,6 +232,10 @@ public class BookingServiceImpl implements BookingService {
         booking.setVehicleType(vehicleType);
         booking.setCheckIn(LocalDateTime.now());
         booking.setStatus("PENDING");
+        booking.setPaymentCode(generateWalkInCode());
+        
+        // Set giá tiền dự kiến để bảo vệ thu tiền ngay
+        booking.setAmountDue(pricingService.estimateWalkInPrice(vehicleType));
         
         return repo.save(booking);
     }

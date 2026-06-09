@@ -149,6 +149,12 @@ h1,h2,h3,h4,h5,h6,.topbar-title,.login-title,.modal-title,.card-title,.brand-nam
                 <div class="ticket-info">Loại xe: <span id="ticketType"></span></div>
                 <div class="ticket-info">Giờ vào: <span id="ticketTime"></span></div>
                 
+                <!-- Khung hiển thị giá tiền để bảo vệ thu tiền -->
+                <div id="priceTag" style="margin-top: 20px; padding: 15px; background: #f0fdf4; border: 2px solid #16a34a; border-radius: 16px; display: none;">
+                    <div style="font-size: 12px; color: #16a34a; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Số tiền cần thu:</div>
+                    <div id="ticketPrice" style="font-size: 28px; color: #15803d; font-weight: 800; font-family: var(--mono);">0 đ</div>
+                </div>
+
                 <button class="btn btn-outline" style="margin-top: 24px;" onclick="resetForm()">Tạo vé khác</button>
             </div>
         </div>
@@ -225,6 +231,15 @@ h1,h2,h3,h4,h5,h6,.topbar-title,.login-title,.modal-title,.card-title,.brand-nam
                 document.getElementById('ticketPlate').textContent = result.data.licensePlate;
                 document.getElementById('ticketType').textContent = result.data.vehicleType === 'xe_may' ? 'Xe máy' : 'Ô tô';
                 document.getElementById('ticketTime').textContent = new Date(result.data.checkInTime).toLocaleString('vi-VN');
+                
+                // Hiển thị giá tiền cần thu
+                if (result.data.estimatedPrice > 0) {
+                    document.getElementById('ticketPrice').textContent = result.data.estimatedPrice.toLocaleString('vi-VN') + ' đ';
+                    document.getElementById('priceTag').style.display = 'block';
+                } else {
+                    document.getElementById('priceTag').style.display = 'none';
+                }
+
                 document.getElementById('walkInForm').style.display = 'none';
                 document.getElementById('ticketDisplay').style.display = 'block';
             } else {
